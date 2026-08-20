@@ -1,0 +1,27 @@
+# Variables privadas
+.env
+backend/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+backend/.venv/
+.venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Archivos Excel y temporales
+*.xlsx
+*.xls
+*.tmp
+uploads/
+
+# VS Code
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
