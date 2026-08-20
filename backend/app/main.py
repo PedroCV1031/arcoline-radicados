@@ -1,4 +1,5 @@
 import os
+from app.routers import radicados, importaciones
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -26,6 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(radicados.router)
+app.include_router(importaciones.router)
 
 @app.get("/")
 def inicio():
