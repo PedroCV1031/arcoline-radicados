@@ -1,5 +1,5 @@
 import os
-from app.routers import radicados, importaciones
+from app.routers import importaciones, radicados, ventas
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -29,6 +29,7 @@ app.add_middleware(
 
 app.include_router(radicados.router)
 app.include_router(importaciones.router)
+app.include_router(ventas.router)
 
 @app.get("/")
 def inicio():
