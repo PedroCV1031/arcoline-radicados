@@ -534,3 +534,61 @@
     flex-wrap: wrap;
   }
 }
+
+.resumen-ventas {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(200px, 1fr)
+  );
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tarjeta-indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 20px;
+  background: var(--verde-claro);
+  border: 1px solid var(--verde-borde);
+  border-radius: 10px;
+}
+
+.tarjeta-indicador span {
+  color: var(--texto-secundario);
+  font-weight: 600;
+}
+
+.tarjeta-indicador strong {
+  color: var(--verde-principal);
+  font-size: 1.8rem;
+}
+
+.grafica-ventas,
+.bloque-tabla-ventas {
+  margin-top: 24px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #dce8e0;
+  border-radius: 10px;
+}
+
+.encabezado-grafica {
+  margin-bottom: 15px;
+}
+
+.grafica-ventas h3,
+.bloque-tabla-ventas h3 {
+  margin: 0 0 7px;
+  color: var(--verde-oscuro);
+}
+
+.sin-datos-ventas {
+  padding: 35px;
+  color: var(--texto-secundario);
+  text-align: center;
+  background: #f7fbf8;
+  border: 1px dashed var(--verde-borde);
+  border-radius: 9px;
+}
