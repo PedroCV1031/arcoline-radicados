@@ -200,10 +200,17 @@ function ImportacionPage() {
         <div>
           <h2>Importar Excel</h2>
           <p>
-            Selecciona las hojas que deseas reemplazar en
-            MongoDB.
+            Seleccionar las hojas para importar en la base de datos
           </p>
         </div>
+
+        <button
+          type="button"
+          className="boton-secundario"
+          onClick={() => window.location.reload()}
+        >
+          Reiniciar
+        </button>
       </div>
 
       <div className="zona-archivo">
@@ -212,29 +219,31 @@ function ImportacionPage() {
             Archivo Excel
           </label>
 
-          <input
-            id="archivoExcel"
-            type="file"
-            accept=".xlsx,.xlsm"
-            onChange={seleccionarArchivo}
-          />
+          <div className="fila-seleccion-archivo">
+            <input
+              id="archivoExcel"
+              type="file"
+              accept=".xlsx,.xlsm"
+              onChange={seleccionarArchivo}
+            />
+
+            <button
+              type="button"
+              className="boton-principal"
+              disabled={!archivo || consultando}
+              onClick={consultarHojas}
+            >
+              {consultando
+                ? 'Consultando hojas...'
+                : 'Consultar hojas'}
+            </button>
+          </div>
 
           <small>
             Formatos permitidos: .xlsx y .xlsm. Tamaño máximo:
             20 MB.
           </small>
         </div>
-
-        <button
-          type="button"
-          className="boton-principal"
-          disabled={!archivo || consultando}
-          onClick={consultarHojas}
-        >
-          {consultando
-            ? 'Consultando hojas...'
-            : 'Consultar hojas'}
-        </button>
       </div>
 
       {archivo && (

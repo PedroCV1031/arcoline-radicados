@@ -44,8 +44,9 @@
 
 .subtitulo {
   padding-left: 18px;
-  color: var(--texto-secundario);
-  font-size: 0.95rem;
+  color: #000000;
+  font-size: 1.1rem;
+  font-weight: 500;
   border-left: 1px solid var(--verde-borde);
 }
 
@@ -302,6 +303,38 @@
   box-shadow: 0 0 0 3px rgb(8 120 63 / 12%);
 }
 
+.campo-filtro input:disabled,
+.campo-filtro select:disabled {
+  color: var(--texto-secundario);
+  cursor: not-allowed;
+  background: #edf3ef;
+}
+
+.campo-filtro small {
+  color: var(--texto-secundario);
+  font-size: 0.75rem;
+}
+
+.panel-filtros-ventas {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.fila-filtros-ventas-principal {
+  grid-template-columns:
+    minmax(145px, 0.75fr)
+    minmax(145px, 0.75fr)
+    minmax(220px, 1.35fr)
+    minmax(220px, 1.35fr);
+}
+
+.fila-filtros-ventas-grafica {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.acciones-filtros-ventas {
+  align-self: stretch;
+}
+
 .acciones-filtros {
   display: flex;
   align-items: center;
@@ -357,6 +390,11 @@
     border-top: 1px solid var(--verde-borde);
     border-left: 0;
   }
+
+  .fila-filtros-ventas-principal,
+  .fila-filtros-ventas-grafica {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
 }
 
 @media (max-width: 800px) {
@@ -367,6 +405,11 @@
 
 @media (max-width: 520px) {
   .fila-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .fila-filtros-ventas-principal,
+  .fila-filtros-ventas-grafica {
     grid-template-columns: 1fr;
   }
 
@@ -417,9 +460,6 @@
 }
 
 .zona-archivo {
-  display: flex;
-  align-items: flex-end;
-  gap: 20px;
   padding: 20px;
   background: #f7fbf8;
   border: 1px solid var(--verde-borde);
@@ -428,7 +468,6 @@
 
 .campo-archivo {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: 8px;
 }
@@ -438,7 +477,16 @@
   font-weight: 700;
 }
 
-.campo-archivo input {
+.fila-seleccion-archivo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.fila-seleccion-archivo input {
+  width: 100%;
+  min-width: 0;
   padding: 10px;
   background: white;
   border: 1px solid #bfd1c5;
@@ -446,6 +494,8 @@
 }
 
 .campo-archivo small {
+  display: block;
+  margin-top: 4px;
   color: var(--texto-secundario);
 }
 
@@ -610,6 +660,18 @@
   .acciones-hojas {
     flex-wrap: wrap;
   }
+
+  .fila-seleccion-archivo {
+    grid-template-columns: 1fr;
+  }
+
+  .fila-seleccion-archivo button {
+    width: 100%;
+  }
+}
+
+.fila-seleccion-archivo input[type='file']::file-selector-button {
+  margin-right: 12px;
 }
 
 .resumen-ventas {
