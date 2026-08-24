@@ -1,3 +1,4 @@
+
 :root {
   --verde-principal: #07583a;
   --verde-oscuro: #173d2d;
@@ -935,5 +936,216 @@
   .sesion-encabezado {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+:root {
+   --imagen-fondo-aplicacion:
+    url('./assets/fondo-arcoline.jpg');
+  --fondo: #d5c9ad;
+  --blanco: #fffdf5;
+  --texto: #171914;
+  --texto-secundario: #45483f;
+  --verde-claro: #dce4d3;
+  --verde-borde: #214733;
+  --borde-suave: #827968;
+  --papel-oscuro: #c7b99e;
+  --sombra-solida: #ab9c7e;
+}
+
+.aplicacion,
+.pantalla-login {
+  background-color: var(--fondo);
+  background-image:
+    linear-gradient(
+      rgb(213 201 173 / 72%),
+      rgb(213 201 173 / 72%)
+    ),
+    var(--imagen-fondo-aplicacion),
+    linear-gradient(
+      rgb(23 61 45 / 8%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgb(23 61 45 / 8%) 1px,
+      transparent 1px
+    );
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-position: center, center, top left, top left;
+  background-size: cover, cover, 24px 24px, 24px 24px;
+  background-attachment: fixed, fixed, scroll, scroll;
+}
+
+.encabezado,
+.contenido section,
+.tarjeta-login {
+  background: var(--blanco);
+}
+
+.contenido section {
+  border-color: #113f2c;
+  box-shadow: 9px 9px 0 var(--sombra-solida);
+}
+
+.contenido p,
+.encabezado-login p,
+.campo-filtro small,
+.campo-archivo small,
+.tarjeta-resumen span,
+.tarjeta-indicador span {
+  color: var(--texto-secundario);
+}
+
+.titulo-pagina > div > p {
+  color: #343730;
+  font-size: 1.02rem;
+  font-weight: 500;
+}
+
+.subtitulo,
+.sesion-encabezado span {
+  color: #11130f;
+  font-weight: 700;
+}
+
+.navegacion a {
+  color: #103c2b;
+}
+
+.panel-filtros,
+.zona-archivo {
+  background-color: #e6deca;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 31px,
+    rgb(17 63 44 / 11%) 32px
+  );
+  border-color: #173d2d;
+}
+
+.campo-filtro label,
+.campo-login label,
+.campo-archivo label {
+  color: #103c2b;
+  font-weight: 700;
+}
+
+.campo-filtro input,
+.campo-filtro select,
+.campo-login input,
+.fila-seleccion-archivo input {
+  color: #171914;
+  font-weight: 500;
+  background: #fffef9;
+  border-color: #6f6758;
+}
+
+.campo-filtro input::placeholder,
+.campo-login input::placeholder {
+  color: #6a665d;
+  opacity: 1;
+}
+
+.campo-filtro input:focus,
+.campo-filtro select:focus,
+.campo-login input:focus,
+.fila-seleccion-archivo input:focus {
+  border-color: var(--magenta-arcoline);
+  outline: 2px solid rgb(192 0 127 / 24%);
+  outline-offset: 1px;
+  box-shadow: 3px 3px 0 rgb(192 0 127 / 24%);
+}
+
+.acciones-filtros {
+  border-color: #173d2d;
+}
+
+.contenedor-tabla {
+  border-color: #103c2b;
+}
+
+.tabla-radicados {
+  color: #171914;
+  font-weight: 500;
+}
+
+.tabla-radicados th {
+  color: #fffef8;
+  background: #103c2b;
+  border-right-color: rgb(255 255 255 / 35%);
+}
+
+.tabla-radicados td {
+  border-right-color: #aaa087;
+  border-bottom-color: #aaa087;
+}
+
+.tabla-radicados tbody tr {
+  background: #fffdf5;
+}
+
+.tabla-radicados tbody tr:nth-child(even) {
+  background: #e5dcc8;
+}
+
+.tabla-radicados tbody tr:hover {
+  color: #0e2f22;
+  background: #cdd9c4;
+}
+
+.bloque-hojas,
+.grafica-ventas,
+.bloque-tabla-ventas {
+  border-color: #214733;
+  box-shadow: 5px 5px 0 #b4a588;
+}
+
+.opcion-hoja {
+  color: #20221d;
+  background: #e5dcc8;
+  border-color: #827968;
+}
+
+.opcion-hoja:has(input:checked) {
+  color: #103c2b;
+  font-weight: 600;
+  background: #d4e0cc;
+}
+
+.archivo-seleccionado,
+.mensaje-estado {
+  color: #103c2b;
+  font-weight: 600;
+  background: #d5e2cf;
+  border-color: #214733;
+}
+
+.tarjeta-resumen,
+.tarjeta-indicador {
+  color: #171914;
+  background: #fffdf5;
+  border-color: #214733;
+}
+
+.sin-datos-ventas {
+  color: #3f423a;
+  background: #e5dcc8;
+  border-color: #214733;
+}
+
+.recharts-text {
+  fill: #353830;
+  font-weight: 500;
+}
+
+.recharts-cartesian-grid line {
+  stroke: #9f957f;
+}
+
+@media (max-width: 850px) {
+  .contenido section {
+    box-shadow: 6px 6px 0 var(--sombra-solida);
   }
 }
