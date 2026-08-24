@@ -19,6 +19,22 @@ COOKIE_SECURE = (
     os.getenv("COOKIE_SECURE", "false").lower() == "true"
 )
 
+COOKIE_SAMESITE = os.getenv(
+    "COOKIE_SAMESITE",
+    "lax",
+).lower()
+
+if COOKIE_SAMESITE not in {"lax", "strict", "none"}:
+    raise RuntimeError(
+        "COOKIE_SAMESITE debe ser lax, strict o none"
+    )
+
+if COOKIE_SAMESITE == "none" and not COOKIE_SECURE:
+    raise RuntimeError(
+        "COOKIE_SECURE debe ser true cuando "
+        "COOKIE_SAMESITE es none"
+    )
+
 ALGORITHM = "HS256"
 COOKIE_NAME = "arcoline_session"
 
@@ -127,7 +143,7 @@ def iniciar_sesion(
         max_age=SESSION_HOURS * 60 * 60,
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         path="/",
     )
 
@@ -152,6 +168,9 @@ def cerrar_sesion(response: Response):
     response.delete_cookie(
         key=COOKIE_NAME,
         path="/",
+        secure=COOKIE_SECURE,
+        httponly=True,
+        samesite=COOKIE_SAMESITE,
     )
 
     return {
