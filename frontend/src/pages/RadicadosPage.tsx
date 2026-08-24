@@ -191,7 +191,7 @@ function RadicadosPage() {
       <div className="titulo-pagina">
         <div>
           <h2>Radicados</h2>
-          <p>Información almacenada actualmente en MongoDB.</p>
+          <p>Información almacenada actualmente en la base de datos</p>
         </div>
 
         <div className="contador-registros">

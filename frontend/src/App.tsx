@@ -16,7 +16,7 @@ function App() {
             className="logo"
           />
 
-          <span className="subtitulo">Gestión de radicados</span>
+          <span className="subtitulo">Plataforma produccion de arcos</span>
         </div>
 
         <nav className="navegacion">
@@ -28,14 +28,14 @@ function App() {
 
       <main className="contenido">
         <Routes>
-          <Route path="/" element={<Navigate to="/radicados" replace />} />
+          <Route path="/" element={<Navigate to="/importaciones" replace />} />
           <Route path="/radicados" element={<RadicadosPage />} />
           <Route path="/importaciones" element={<ImportacionPage />} />
           <Route
             path="/ventas-semanales"
             element={<VentasSemanalesPage />}
           />
-          <Route path="*" element={<Navigate to="/radicados" replace />} />
+          <Route path="*" element={<Navigate to="/importaciones" replace />} />
         </Routes>
       </main>
     </div>

@@ -4,8 +4,13 @@ import type { SubmitEvent } from 'react'
 import {
   Bar,
   BarChart,
+  Cell,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -57,6 +62,17 @@ interface PuntoGrafica {
   semana: string
   [referencia: string]: string | number
 }
+
+interface PuntoTorta {
+  referencia: string
+  unidades: number
+}
+
+type TipoGrafica =
+  | 'barras-apiladas'
+  | 'barras-agrupadas'
+  | 'lineas'
+  | 'torta'
 
 const COLORES_GRAFICA = [
   '#08783f',
@@ -137,6 +153,12 @@ function VentasSemanalesPage() {
   const [resultado, setResultado] =
     useState<RespuestaVentas | null>(null)
 
+  const [cantidadReferencias, setCantidadReferencias] =
+    useState(5)
+  const [tipoGrafica, setTipoGrafica] =
+    useState<TipoGrafica>('barras-apiladas')
+  const [semanaTorta, setSemanaTorta] = useState('')
+
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
@@ -190,6 +212,34 @@ function VentasSemanalesPage() {
     consultarVentas()
   }, [filtrosAplicados])
 
+  useEffect(() => {
+    if (!resultado) {
+      return
+    }
+
+    const maximoReferencias = Math.max(
+      resultado.total_referencias,
+      1,
+    )
+
+    setCantidadReferencias((cantidadActual) =>
+      Math.min(
+        Math.max(cantidadActual, 1),
+        maximoReferencias,
+      ),
+    )
+
+    const semanasDisponibles = Array.from(
+      new Set(resultado.datos.map((dato) => dato.semana)),
+    ).sort()
+
+    setSemanaTorta((semanaActual) =>
+      semanasDisponibles.includes(semanaActual)
+        ? semanaActual
+        : (semanasDisponibles.at(-1) ?? ''),
+    )
+  }, [resultado])
+
   function aplicarFiltros(
     evento: SubmitEvent<HTMLFormElement>,
   ) {
@@ -221,15 +271,41 @@ function VentasSemanalesPage() {
     setFiltrosAplicados(filtrosLimpios)
   }
 
+  const maximoReferencias = Math.max(
+    resultado?.total_referencias ?? 1,
+    1,
+  )
+
+  const cantidadReferenciasAplicada =
+    filtrosAplicados.referencia
+      ? 1
+      : Math.min(cantidadReferencias, maximoReferencias)
+
+  const semanasDisponibles = Array.from(
+    new Set(resultado?.datos.map((dato) => dato.semana) ?? []),
+  ).sort()
+
+  const referenciasOrdenadasTorta =
+    resultado?.datos
+      .filter((dato) => dato.semana === semanaTorta)
+      .sort((primero, segundo) =>
+        segundo.unidades - primero.unidades,
+      ) ?? []
+
   const referenciasGrafica =
-    resultado?.referencias
-      .slice(0, 8)
-      .map((item) => item.referencia) ?? []
+    tipoGrafica === 'torta'
+      ? referenciasOrdenadasTorta
+          .slice(0, cantidadReferenciasAplicada)
+          .map((item) => item.referencia)
+      : (resultado?.referencias
+          .slice(0, cantidadReferenciasAplicada)
+          .map((item) => item.referencia) ?? [])
 
   const datosPorSemana = new Map<string, PuntoGrafica>()
+  let existenOtras = false
 
   resultado?.datos.forEach((dato) => {
-    if (!referenciasGrafica.includes(dato.referencia)) {
+    if (tipoGrafica === 'torta' && dato.semana !== semanaTorta) {
       return
     }
 
@@ -237,16 +313,52 @@ function VentasSemanalesPage() {
       semana: dato.semana,
     }
 
-    puntoExistente[dato.referencia] = dato.unidades
+    const referenciaGrafica = referenciasGrafica.includes(
+      dato.referencia,
+    )
+      ? dato.referencia
+      : 'OTRAS'
+
+    if (referenciaGrafica === 'OTRAS') {
+      existenOtras = true
+    }
+
+    puntoExistente[referenciaGrafica] =
+      Number(puntoExistente[referenciaGrafica] ?? 0) +
+      dato.unidades
+
     datosPorSemana.set(dato.semana, puntoExistente)
   })
 
+  const seriesGrafica = existenOtras
+    ? [...referenciasGrafica, 'OTRAS']
+    : referenciasGrafica
+
   const datosGrafica = Array.from(
     datosPorSemana.values(),
-  ).sort((primero, segundo) =>
-    String(primero.semana).localeCompare(
-      String(segundo.semana),
-    ),
+  )
+    .map((punto) => {
+      const puntoCompleto = { ...punto }
+
+      seriesGrafica.forEach((referencia) => {
+        puntoCompleto[referencia] ??= 0
+      })
+
+      return puntoCompleto
+    })
+    .sort((primero, segundo) =>
+      String(primero.semana).localeCompare(
+        String(segundo.semana),
+      ),
+    )
+
+  const datosTorta: PuntoTorta[] = seriesGrafica.map(
+    (referencia) => ({
+      referencia,
+      unidades: Number(
+        datosGrafica[0]?.[referencia] ?? 0,
+      ),
+    }),
   )
 
   return (
@@ -261,92 +373,179 @@ function VentasSemanalesPage() {
         </div>
       </div>
 
-      <form className="panel-filtros" onSubmit={aplicarFiltros}>
-        <div className="campo-filtro">
-          <label htmlFor="ventaFechaInicial">
-            Fecha inicial
-          </label>
+      <form
+        className="panel-filtros panel-filtros-ventas"
+        onSubmit={aplicarFiltros}
+      >
+        <div className="contenido-filtros">
+          <div className="fila-filtros fila-filtros-ventas-principal">
+            <div className="campo-filtro">
+              <label htmlFor="ventaFechaInicial">
+                Fecha inicial
+              </label>
 
-          <input
-            id="ventaFechaInicial"
-            type="date"
-            value={filtros.fechaInicial}
-            onChange={(evento) =>
-              setFiltros((actuales) => ({
-                ...actuales,
-                fechaInicial: evento.target.value,
-              }))
-            }
-          />
+              <input
+                id="ventaFechaInicial"
+                type="date"
+                value={filtros.fechaInicial}
+                onChange={(evento) =>
+                  setFiltros((actuales) => ({
+                    ...actuales,
+                    fechaInicial: evento.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="ventaFechaFinal">
+                Fecha final
+              </label>
+
+              <input
+                id="ventaFechaFinal"
+                type="date"
+                value={filtros.fechaFinal}
+                onChange={(evento) =>
+                  setFiltros((actuales) => ({
+                    ...actuales,
+                    fechaFinal: evento.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="ventaCliente">Cliente</label>
+
+              <select
+                id="ventaCliente"
+                value={filtros.cliente}
+                onChange={(evento) =>
+                  setFiltros((actuales) => ({
+                    ...actuales,
+                    cliente: evento.target.value,
+                  }))
+                }
+              >
+                <option value="">Todos</option>
+
+                {opciones.clientes.map((cliente) => (
+                  <option key={cliente} value={cliente}>
+                    {cliente}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="ventaReferencia">
+                Referencia
+              </label>
+
+              <select
+                id="ventaReferencia"
+                value={filtros.referencia}
+                onChange={(evento) =>
+                  setFiltros((actuales) => ({
+                    ...actuales,
+                    referencia: evento.target.value,
+                  }))
+                }
+              >
+                <option value="">Todas</option>
+
+                {opciones.referencias.map((referencia) => (
+                  <option key={referencia} value={referencia}>
+                    {referencia}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="fila-filtros fila-filtros-ventas-grafica">
+            <div className="campo-filtro">
+              <label htmlFor="tipoGrafica">
+                Tipo de gráfica
+              </label>
+
+              <select
+                id="tipoGrafica"
+                value={tipoGrafica}
+                onChange={(evento) =>
+                  setTipoGrafica(
+                    evento.target.value as TipoGrafica,
+                  )
+                }
+              >
+                <option value="barras-apiladas">
+                  Barras apiladas
+                </option>
+                <option value="barras-agrupadas">
+                  Barras agrupadas
+                </option>
+                <option value="lineas">Líneas</option>
+                <option value="torta">Torta</option>
+              </select>
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="cantidadReferencias">
+                Referencias en gráfica
+              </label>
+
+              <input
+                id="cantidadReferencias"
+                type="number"
+                min="1"
+                max={maximoReferencias}
+                value={
+                  filtros.referencia
+                    ? 1
+                    : cantidadReferencias
+                }
+                disabled={Boolean(filtros.referencia)}
+                onChange={(evento) => {
+                  const cantidad = Number(evento.target.value)
+
+                  setCantidadReferencias(
+                    Math.min(
+                      Math.max(cantidad || 1, 1),
+                      maximoReferencias,
+                    ),
+                  )
+                }}
+              />
+
+              <small>Máximo disponible: {maximoReferencias}</small>
+            </div>
+
+            {tipoGrafica === 'torta' && (
+              <div className="campo-filtro">
+                <label htmlFor="semanaTorta">
+                  Semana para la torta
+                </label>
+
+                <select
+                  id="semanaTorta"
+                  value={semanaTorta}
+                  onChange={(evento) =>
+                    setSemanaTorta(evento.target.value)
+                  }
+                >
+                  {semanasDisponibles.map((semana) => (
+                    <option key={semana} value={semana}>
+                      {formatearSemana(semana)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="ventaFechaFinal">
-            Fecha final
-          </label>
-
-          <input
-            id="ventaFechaFinal"
-            type="date"
-            value={filtros.fechaFinal}
-            onChange={(evento) =>
-              setFiltros((actuales) => ({
-                ...actuales,
-                fechaFinal: evento.target.value,
-              }))
-            }
-          />
-        </div>
-
-        <div className="campo-filtro">
-          <label htmlFor="ventaCliente">Cliente</label>
-
-          <select
-            id="ventaCliente"
-            value={filtros.cliente}
-            onChange={(evento) =>
-              setFiltros((actuales) => ({
-                ...actuales,
-                cliente: evento.target.value,
-              }))
-            }
-          >
-            <option value="">Todos</option>
-
-            {opciones.clientes.map((cliente) => (
-              <option key={cliente} value={cliente}>
-                {cliente}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="campo-filtro">
-          <label htmlFor="ventaReferencia">
-            Referencia
-          </label>
-
-          <select
-            id="ventaReferencia"
-            value={filtros.referencia}
-            onChange={(evento) =>
-              setFiltros((actuales) => ({
-                ...actuales,
-                referencia: evento.target.value,
-              }))
-            }
-          >
-            <option value="">Todas</option>
-
-            {opciones.referencias.map((referencia) => (
-              <option key={referencia} value={referencia}>
-                {referencia}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="acciones-filtros">
+        <div className="acciones-filtros acciones-filtros-ventas">
           <button type="submit" className="boton-principal">
             Consultar
           </button>
@@ -397,75 +596,190 @@ function VentasSemanalesPage() {
               <div className="grafica-ventas">
                 <div className="encabezado-grafica">
                   <div>
-                    <h3>Unidades por semana</h3>
+                    <h3>
+                      {tipoGrafica === 'torta'
+                        ? `Distribución de unidades — ${
+                            semanaTorta
+                              ? formatearSemana(semanaTorta)
+                              : 'sin semana'
+                          }`
+                        : 'Unidades por semana'}
+                    </h3>
 
-                    {resultado.total_referencias > 8 && (
-                      <p>
-                        La gráfica muestra las ocho referencias
-                        con mayor cantidad de unidades.
-                      </p>
-                    )}
+                    <p>
+                      Se muestran las{' '}
+                      {Math.min(
+                        cantidadReferenciasAplicada,
+                        referenciasGrafica.length,
+                      )}{' '}
+                      referencias con más unidades
+                      {existenOtras
+                        ? ' y las restantes se agrupan como OTRAS.'
+                        : '.'}
+                    </p>
                   </div>
                 </div>
 
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={datosGrafica}
-                    margin={{
-                      top: 20,
-                      right: 20,
-                      left: 20,
-                      bottom: 20,
-                    }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#dce8e0"
-                    />
+                {tipoGrafica === 'torta' ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={datosTorta}
+                        dataKey="unidades"
+                        nameKey="referencia"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={140}
+                        label={({ name, percent }) =>
+                          `${name}: ${(
+                            Number(percent ?? 0) * 100
+                          ).toFixed(1)}%`
+                        }
+                      >
+                        {datosTorta.map((dato, indice) => (
+                          <Cell
+                            key={dato.referencia}
+                            fill={
+                              COLORES_GRAFICA[
+                                indice % COLORES_GRAFICA.length
+                              ]
+                            }
+                          />
+                        ))}
+                      </Pie>
 
-                    <XAxis
-                      dataKey="semana"
-                      tickFormatter={formatearSemana}
-                    />
+                      <Tooltip
+                        formatter={(valor) =>
+                          Number(valor ?? 0).toLocaleString(
+                            'es-CO',
+                          )
+                        }
+                      />
 
-                    <YAxis
-                      tickFormatter={(valor) =>
-                        Number(valor).toLocaleString('es-CO')
-                      }
-                    />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : tipoGrafica === 'lineas' ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart
+                      data={datosGrafica}
+                      margin={{
+                        top: 20,
+                        right: 20,
+                        left: 20,
+                        bottom: 20,
+                      }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#dce8e0"
+                      />
 
-                    <Tooltip
-                      labelFormatter={(valor) =>
-                        `Semana: ${formatearSemana(
-                          String(valor),
-                        )}`
-                      }
-                      formatter={(valor) =>
-                        Number(valor ?? 0).toLocaleString(
-                          'es-CO',
-                        )
-                      }
-                    />
+                      <XAxis
+                        dataKey="semana"
+                        tickFormatter={formatearSemana}
+                        minTickGap={28}
+                      />
 
-                    <Legend />
+                      <YAxis
+                        tickFormatter={(valor) =>
+                          Number(valor).toLocaleString('es-CO')
+                        }
+                      />
 
-                    {referenciasGrafica.map(
-                      (referencia, indice) => (
+                      <Tooltip
+                        labelFormatter={(valor) =>
+                          `Semana: ${formatearSemana(
+                            String(valor),
+                          )}`
+                        }
+                        formatter={(valor) =>
+                          Number(valor ?? 0).toLocaleString(
+                            'es-CO',
+                          )
+                        }
+                      />
+
+                      <Legend />
+
+                      {seriesGrafica.map((referencia, indice) => (
+                        <Line
+                          key={referencia}
+                          type="monotone"
+                          dataKey={referencia}
+                          stroke={
+                            COLORES_GRAFICA[
+                              indice % COLORES_GRAFICA.length
+                            ]
+                          }
+                          strokeWidth={2}
+                          dot={resultado.total_semanas <= 20}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={datosGrafica}
+                      margin={{
+                        top: 20,
+                        right: 20,
+                        left: 20,
+                        bottom: 20,
+                      }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#dce8e0"
+                      />
+
+                      <XAxis
+                        dataKey="semana"
+                        tickFormatter={formatearSemana}
+                        minTickGap={28}
+                      />
+
+                      <YAxis
+                        tickFormatter={(valor) =>
+                          Number(valor).toLocaleString('es-CO')
+                        }
+                      />
+
+                      <Tooltip
+                        labelFormatter={(valor) =>
+                          `Semana: ${formatearSemana(
+                            String(valor),
+                          )}`
+                        }
+                        formatter={(valor) =>
+                          Number(valor ?? 0).toLocaleString(
+                            'es-CO',
+                          )
+                        }
+                      />
+
+                      <Legend />
+
+                      {seriesGrafica.map((referencia, indice) => (
                         <Bar
                           key={referencia}
                           dataKey={referencia}
-                          stackId="unidades"
+                          stackId={
+                            tipoGrafica === 'barras-apiladas'
+                              ? 'unidades'
+                              : undefined
+                          }
                           fill={
                             COLORES_GRAFICA[
-                              indice %
-                                COLORES_GRAFICA.length
+                              indice % COLORES_GRAFICA.length
                             ]
                           }
                         />
-                      ),
-                    )}
-                  </BarChart>
-                </ResponsiveContainer>
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               <div className="bloque-tabla-ventas">
