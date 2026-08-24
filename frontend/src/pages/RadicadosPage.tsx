@@ -200,190 +200,196 @@ function RadicadosPage() {
       </div>
 
       <form className="panel-filtros" onSubmit={aplicarFiltros}>
-        <div className="campo-filtro">
-          <label htmlFor="fechaInicial">Fecha inicial</label>
-          <input
-            id="fechaInicial"
-            type="date"
-            value={filtros.fechaInicial}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'fechaInicial',
-                evento.target.value,
-              )
-            }
-          />
-        </div>
+        <div className="contenido-filtros">
+          <div className="fila-filtros fila-negocio">
+            <div className="campo-filtro">
+              <label htmlFor="cliente">Cliente</label>
+              <select
+                id="cliente"
+                value={filtros.cliente}
+                onChange={(evento) =>
+                  actualizarFiltro('cliente', evento.target.value)
+                }
+              >
+                <option value="">Todos</option>
 
-        <div className="campo-filtro">
-          <label htmlFor="fechaFinal">Fecha final</label>
-          <input
-            id="fechaFinal"
-            type="date"
-            value={filtros.fechaFinal}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'fechaFinal',
-                evento.target.value,
-              )
-            }
-          />
-        </div>
+                {opciones.clientes.map((cliente) => (
+                  <option key={cliente} value={cliente}>
+                    {cliente}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="cliente">Cliente</label>
-          <select
-            id="cliente"
-            value={filtros.cliente}
-            onChange={(evento) =>
-              actualizarFiltro('cliente', evento.target.value)
-            }
-          >
-            <option value="">Todos</option>
+            <div className="campo-filtro">
+              <label htmlFor="ordenCompra">Orden de compra</label>
+              <input
+                id="ordenCompra"
+                type="text"
+                placeholder="Ejemplo: 11048"
+                value={filtros.ordenCompra}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'ordenCompra',
+                    evento.target.value,
+                  )
+                }
+              />
+            </div>
 
-            {opciones.clientes.map((cliente) => (
-              <option key={cliente} value={cliente}>
-                {cliente}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="campo-filtro">
+              <label htmlFor="referencia">Referencia</label>
+              <select
+                id="referencia"
+                value={filtros.referencia}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'referencia',
+                    evento.target.value,
+                  )
+                }
+              >
+                <option value="">Todas</option>
 
-        <div className="campo-filtro">
-          <label htmlFor="referencia">Referencia</label>
-          <select
-            id="referencia"
-            value={filtros.referencia}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'referencia',
-                evento.target.value,
-              )
-            }
-          >
-            <option value="">Todas</option>
+                {opciones.referencias.map((referencia) => (
+                  <option key={referencia} value={referencia}>
+                    {referencia}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {opciones.referencias.map((referencia) => (
-              <option key={referencia} value={referencia}>
-                {referencia}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="campo-filtro">
+              <label htmlFor="talla">Talla</label>
+              <select
+                id="talla"
+                value={filtros.talla}
+                onChange={(evento) =>
+                  actualizarFiltro('talla', evento.target.value)
+                }
+              >
+                <option value="">Todas</option>
 
-        <div className="campo-filtro">
-          <label htmlFor="ordenCompra">Orden de compra</label>
-          <input
-            id="ordenCompra"
-            type="text"
-            placeholder="Ejemplo: 11048"
-            value={filtros.ordenCompra}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'ordenCompra',
-                evento.target.value,
-              )
-            }
-          />
-        </div>
+                {opciones.tallas.map((talla) => (
+                  <option key={talla} value={talla}>
+                    {talla}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="hojaOrigen">Hoja de origen</label>
-          <select
-            id="hojaOrigen"
-            value={filtros.hojaOrigen}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'hojaOrigen',
-                evento.target.value,
-              )
-            }
-          >
-            <option value="">Todas</option>
+            <div className="campo-filtro">
+              <label htmlFor="hojaOrigen">Hoja de origen</label>
+              <select
+                id="hojaOrigen"
+                value={filtros.hojaOrigen}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'hojaOrigen',
+                    evento.target.value,
+                  )
+                }
+              >
+                <option value="">Todas</option>
 
-            {opciones.hojas.map((hoja) => (
-              <option key={hoja} value={hoja}>
-                {hoja}
-              </option>
-            ))}
-          </select>
-        </div>
+                {opciones.hojas.map((hoja) => (
+                  <option key={hoja} value={hoja}>
+                    {hoja}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="talla">Talla</label>
-          <select
-            id="talla"
-            value={filtros.talla}
-            onChange={(evento) =>
-              actualizarFiltro('talla', evento.target.value)
-            }
-          >
-            <option value="">Todas</option>
+          <div className="fila-filtros fila-consulta">
+            <div className="campo-filtro">
+              <label htmlFor="fechaInicial">Fecha inicial</label>
+              <input
+                id="fechaInicial"
+                type="date"
+                value={filtros.fechaInicial}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'fechaInicial',
+                    evento.target.value,
+                  )
+                }
+              />
+            </div>
 
-            {opciones.tallas.map((talla) => (
-              <option key={talla} value={talla}>
-                {talla}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="campo-filtro">
+              <label htmlFor="fechaFinal">Fecha final</label>
+              <input
+                id="fechaFinal"
+                type="date"
+                value={filtros.fechaFinal}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'fechaFinal',
+                    evento.target.value,
+                  )
+                }
+              />
+            </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="ordenarPor">Ordenar por</label>
-          <select
-            id="ordenarPor"
-            value={filtros.ordenarPor}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'ordenarPor',
-                evento.target.value,
-              )
-            }
-          >
-            <option value="fecha_inicio">Fecha inicial</option>
-            <option value="cliente">Cliente</option>
-            <option value="referencia">Referencia</option>
-            <option value="cantidad">Cantidad</option>
-            <option value="orden_compra">
-              Orden de compra
-            </option>
-            <option value="talla">Talla</option>
-          </select>
-        </div>
+            <div className="campo-filtro">
+              <label htmlFor="ordenarPor">Ordenar por</label>
+              <select
+                id="ordenarPor"
+                value={filtros.ordenarPor}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'ordenarPor',
+                    evento.target.value,
+                  )
+                }
+              >
+                <option value="fecha_inicio">Fecha inicial</option>
+                <option value="cliente">Cliente</option>
+                <option value="referencia">Referencia</option>
+                <option value="cantidad">Cantidad</option>
+                <option value="orden_compra">
+                  Orden de compra
+                </option>
+                <option value="talla">Talla</option>
+              </select>
+            </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="direccion">Dirección</label>
-          <select
-            id="direccion"
-            value={filtros.direccion}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'direccion',
-                evento.target.value,
-              )
-            }
-          >
-            <option value="desc">Mayor a menor</option>
-            <option value="asc">Menor a mayor</option>
-          </select>
-        </div>
+            <div className="campo-filtro">
+              <label htmlFor="direccion">Dirección</label>
+              <select
+                id="direccion"
+                value={filtros.direccion}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'direccion',
+                    evento.target.value,
+                  )
+                }
+              >
+                <option value="desc">Mayor a menor</option>
+                <option value="asc">Menor a mayor</option>
+              </select>
+            </div>
 
-        <div className="campo-filtro">
-          <label htmlFor="limite">Registros por página</label>
-          <select
-            id="limite"
-            value={filtros.limite}
-            onChange={(evento) =>
-              actualizarFiltro(
-                'limite',
-                Number(evento.target.value),
-              )
-            }
-          >
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+            <div className="campo-filtro">
+              <label htmlFor="limite">Registros por página</label>
+              <select
+                id="limite"
+                value={filtros.limite}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'limite',
+                    Number(evento.target.value),
+                  )
+                }
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="acciones-filtros">

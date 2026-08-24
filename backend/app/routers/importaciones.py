@@ -31,12 +31,34 @@ COLUMNAS_ESPERADAS = [
 ]
 
 
-def es_hoja_valida(nombre_hoja: str) -> bool:
-    nombre_normalizado = nombre_hoja.strip().lower()
+def obtener_columnas_hoja(hoja) -> list[str]:
+    # Los libros también pueden contener hojas de gráficos.
+    if not hasattr(hoja, "iter_rows"):
+        return []
 
-    return not nombre_normalizado.startswith(
-        ("hoja", "sheet")
+    primera_fila = next(
+        hoja.iter_rows(
+            min_row=1,
+            max_row=1,
+            values_only=True
+        ),
+        ()
     )
+
+    columnas = [
+        str(valor).strip() if valor is not None else None
+        for valor in primera_fila
+    ]
+
+    # Ignora columnas vacías que Excel conserve al final.
+    while columnas and columnas[-1] is None:
+        columnas.pop()
+
+    return columnas
+
+
+def es_hoja_valida(hoja) -> bool:
+    return obtener_columnas_hoja(hoja) == COLUMNAS_ESPERADAS
 
 
 def validar_archivo(
@@ -131,22 +153,15 @@ def procesar_hoja(
         for columna in dataframe.columns
     ]
 
-    columnas_faltantes = [
-        columna
-        for columna in COLUMNAS_ESPERADAS
-        if columna not in dataframe.columns
-    ]
+    columnas_recibidas = dataframe.columns.tolist()
 
-    if columnas_faltantes:
+    if columnas_recibidas != COLUMNAS_ESPERADAS:
         raise HTTPException(
             status_code=400,
-            detail={
-                "mensaje": (
-                    f"La hoja '{nombre_hoja}' no tiene "
-                    "la estructura esperada"
-                ),
-                "columnas_faltantes": columnas_faltantes
-            }
+            detail=(
+                f"La hoja '{nombre_hoja}' no tiene "
+                "la estructura requerida"
+            )
         )
 
     dataframe = dataframe[COLUMNAS_ESPERADAS]
@@ -213,18 +228,10 @@ async def consultar_hojas(
             data_only=True
         )
 
-        todas_las_hojas = libro.sheetnames
-
         hojas_validas = [
-            hoja
-            for hoja in todas_las_hojas
-            if es_hoja_valida(hoja)
-        ]
-
-        hojas_ignoradas = [
-            hoja
-            for hoja in todas_las_hojas
-            if not es_hoja_valida(hoja)
+            nombre_hoja
+            for nombre_hoja in libro.sheetnames
+            if es_hoja_valida(libro[nombre_hoja])
         ]
 
         if not hojas_validas:
@@ -235,9 +242,8 @@ async def consultar_hojas(
 
         return {
             "archivo": nombre_archivo,
-            "total_hojas": len(todas_las_hojas),
-            "hojas_validas": hojas_validas,
-            "hojas_ignoradas": hojas_ignoradas
+            "total_hojas_validas": len(hojas_validas),
+            "hojas_validas": hojas_validas
         }
 
     except HTTPException:
@@ -299,7 +305,13 @@ async def cargar_hojas(
             data_only=True
         )
 
-        hojas_disponibles = libro.sheetnames
+        hojas_disponibles = set(libro.sheetnames)
+
+        hojas_validas = {
+            nombre_hoja
+            for nombre_hoja in libro.sheetnames
+            if es_hoja_valida(libro[nombre_hoja])
+        }
 
     except Exception as error:
         raise HTTPException(
@@ -316,7 +328,7 @@ async def cargar_hojas(
         for hoja in hojas_seleccionadas
         if (
             hoja not in hojas_disponibles
-            or not es_hoja_valida(hoja)
+            or hoja not in hojas_validas
         )
     ]
 
