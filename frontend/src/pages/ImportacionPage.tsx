@@ -6,9 +6,8 @@ import api from '../services/api'
 
 interface RespuestaHojas {
   archivo: string
-  total_hojas: number
+  total_hojas_validas: number
   hojas_validas: string[]
-  hojas_ignoradas: string[]
 }
 
 interface ResultadoHoja {
@@ -291,13 +290,6 @@ function ImportacionPage() {
               </label>
             ))}
           </div>
-
-          {informacionHojas.hojas_ignoradas.length > 0 && (
-            <div className="hojas-ignoradas">
-              <strong>Hojas ignoradas:</strong>{' '}
-              {informacionHojas.hojas_ignoradas.join(', ')}
-            </div>
-          )}
 
           <label className="confirmacion-reemplazo">
             <input

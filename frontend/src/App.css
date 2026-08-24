@@ -247,11 +247,9 @@
 
 .panel-filtros {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(180px, 1fr)
-  );
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: stretch;
   margin-bottom: 24px;
   padding: 20px;
   background: #f7fbf8;
@@ -259,8 +257,22 @@
   border-radius: 10px;
 }
 
+.contenido-filtros {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fila-filtros {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 16px;
+}
+
 .campo-filtro {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 6px;
 }
@@ -274,6 +286,7 @@
 .campo-filtro input,
 .campo-filtro select {
   width: 100%;
+  min-width: 0;
   min-height: 42px;
   padding: 9px 11px;
   color: var(--texto);
@@ -291,8 +304,80 @@
 
 .acciones-filtros {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
+  padding-left: 22px;
+  border-left: 1px solid var(--verde-borde);
+}
+
+.boton-principal,
+.boton-secundario {
+  min-height: 42px;
+  padding: 9px 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.boton-principal {
+  color: white;
+  background: var(--verde-principal);
+  border: 1px solid var(--verde-principal);
+}
+
+.boton-principal:hover {
+  background: var(--verde-oscuro);
+}
+
+.boton-secundario {
+  color: var(--verde-oscuro);
+  background: white;
+  border: 1px solid var(--verde-borde);
+}
+
+.boton-secundario:hover {
+  background: var(--verde-claro);
+}
+
+@media (max-width: 1250px) {
+  .panel-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .fila-filtros {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .acciones-filtros {
+    justify-content: flex-end;
+    padding-top: 16px;
+    padding-left: 0;
+    border-top: 1px solid var(--verde-borde);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 800px) {
+  .fila-filtros {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .fila-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .acciones-filtros {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .acciones-filtros button {
+    width: 100%;
+  }
 }
 
 .boton-principal,
@@ -428,14 +513,6 @@
   width: 18px;
   height: 18px;
   accent-color: var(--verde-principal);
-}
-
-.hojas-ignoradas {
-  margin-top: 16px;
-  padding: 12px;
-  color: #6b7280;
-  background: #f3f4f6;
-  border-radius: 7px;
 }
 
 .confirmacion-reemplazo {

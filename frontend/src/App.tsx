@@ -20,8 +20,8 @@ function App() {
         </div>
 
         <nav className="navegacion">
-          <NavLink to="/radicados">Radicados</NavLink>
           <NavLink to="/importaciones">Importar Excel</NavLink>
+          <NavLink to="/radicados">Radicados</NavLink>
           <NavLink to="/ventas-semanales">Ventas semanales</NavLink>
         </nav>
       </header>
