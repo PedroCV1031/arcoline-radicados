@@ -87,12 +87,50 @@ const COLORES_GRAFICA = [
   '#dc2626',
 ]
 
+const FILAS_POR_PAGINA = 8
+const ALTURA_GRAFICA = 598
+
 function fechaLocalParaInput(fecha: Date): string {
   const anio = fecha.getFullYear()
   const mes = String(fecha.getMonth() + 1).padStart(2, '0')
   const dia = String(fecha.getDate()).padStart(2, '0')
 
   return `${anio}-${mes}-${dia}`
+}
+
+function obtenerLunesDeSemana(fechaTexto: string): string {
+  const [anio, mes, dia] = fechaTexto.split('-').map(Number)
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
+  const diaSemana = fecha.getUTCDay()
+  const diasDesdeLunes = diaSemana === 0 ? 6 : diaSemana - 1
+
+  fecha.setUTCDate(fecha.getUTCDate() - diasDesdeLunes)
+
+  return fecha.toISOString().slice(0, 10)
+}
+
+function generarSemanasEntre(
+  semanaInicial: string,
+  semanaFinal: string,
+): string[] {
+  if (
+    !semanaInicial ||
+    !semanaFinal ||
+    semanaInicial > semanaFinal
+  ) {
+    return []
+  }
+
+  const semanas: string[] = []
+  const fechaActual = new Date(`${semanaInicial}T00:00:00Z`)
+  const fechaFinal = new Date(`${semanaFinal}T00:00:00Z`)
+
+  while (fechaActual <= fechaFinal) {
+    semanas.push(fechaActual.toISOString().slice(0, 10))
+    fechaActual.setUTCDate(fechaActual.getUTCDate() + 7)
+  }
+
+  return semanas
 }
 
 function crearFiltrosIniciales(): FiltrosVentas {
@@ -161,6 +199,8 @@ function VentasSemanalesPage() {
   const [tipoGrafica, setTipoGrafica] =
     useState<TipoGrafica>('barras-apiladas')
   const [semanaTorta, setSemanaTorta] = useState('')
+  const [paginaDetalle, setPaginaDetalle] = useState(1)
+  const [paginaReferencias, setPaginaReferencias] = useState(1)
 
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -293,6 +333,9 @@ function VentasSemanalesPage() {
       return
     }
 
+    setPaginaDetalle(1)
+    setPaginaReferencias(1)
+
     const maximoReferencias = Math.max(
       resultado.total_referencias,
       1,
@@ -378,8 +421,32 @@ function VentasSemanalesPage() {
           .slice(0, cantidadReferenciasAplicada)
           .map((item) => item.referencia) ?? [])
 
+  const primeraSemanaGrafica =
+    filtrosAplicados.fechaInicial && semanasDisponibles.length > 0
+      ? obtenerLunesDeSemana(filtrosAplicados.fechaInicial)
+      : (semanasDisponibles[0] ?? '')
+
+  const ultimaSemanaGrafica =
+    filtrosAplicados.fechaFinal && semanasDisponibles.length > 0
+      ? obtenerLunesDeSemana(filtrosAplicados.fechaFinal)
+      : (semanasDisponibles.at(-1) ?? '')
+
+  const semanasGrafica =
+    tipoGrafica === 'torta'
+      ? semanaTorta
+        ? [semanaTorta]
+        : []
+      : generarSemanasEntre(
+          primeraSemanaGrafica,
+          ultimaSemanaGrafica,
+        )
+
   const datosPorSemana = new Map<string, PuntoGrafica>()
   let existenOtras = false
+
+  semanasGrafica.forEach((semana) => {
+    datosPorSemana.set(semana, { semana })
+  })
 
   resultado?.datos.forEach((dato) => {
     if (tipoGrafica === 'torta' && dato.semana !== semanaTorta) {
@@ -438,22 +505,50 @@ function VentasSemanalesPage() {
     }),
   )
 
+  const totalPaginasDetalle = Math.max(
+    Math.ceil(
+      (resultado?.datos.length ?? 0) / FILAS_POR_PAGINA,
+    ),
+    1,
+  )
+
+  const datosDetallePagina =
+    resultado?.datos.slice(
+      (paginaDetalle - 1) * FILAS_POR_PAGINA,
+      paginaDetalle * FILAS_POR_PAGINA,
+    ) ?? []
+
+  const totalPaginasReferencias = Math.max(
+    Math.ceil(
+      (resultado?.referencias.length ?? 0) /
+        FILAS_POR_PAGINA,
+    ),
+    1,
+  )
+
+  const referenciasPagina =
+    resultado?.referencias.slice(
+      (paginaReferencias - 1) * FILAS_POR_PAGINA,
+      paginaReferencias * FILAS_POR_PAGINA,
+    ) ?? []
+
   return (
-    <section>
+    <section className="pagina-ventas">
       <div className="titulo-pagina">
         <div>
           <h2>Ventas semanales</h2>
           <p>
-            Unidades radicadas agrupadas por semana y
-            referencia.
+            Unidades radicadas agrupadas segun los filtros
           </p>
         </div>
       </div>
 
-      <form
-        className="panel-filtros panel-filtros-ventas"
-        onSubmit={aplicarFiltros}
-      >
+      <div className="distribucion-ventas">
+        <div className="columna-ventas-principal">
+          <form
+            className="panel-filtros panel-filtros-ventas"
+            onSubmit={aplicarFiltros}
+          >
         <div className="contenido-filtros">
           <div className="fila-filtros fila-filtros-ventas-principal">
             <div className="campo-filtro">
@@ -664,7 +759,7 @@ function VentasSemanalesPage() {
             Limpiar
           </button>
         </div>
-      </form>
+          </form>
 
       {cargando && (
         <div className="mensaje-estado">
@@ -687,7 +782,7 @@ function VentasSemanalesPage() {
             </div>
 
             <div className="tarjeta-indicador">
-              <span>Semanas</span>
+              <span>Semanas con registros</span>
               <strong>{resultado.total_semanas}</strong>
             </div>
 
@@ -727,7 +822,10 @@ function VentasSemanalesPage() {
                 </div>
 
                 {tipoGrafica === 'torta' ? (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height={ALTURA_GRAFICA}
+                  >
                     <PieChart>
                       <Pie
                         data={datosTorta}
@@ -766,7 +864,10 @@ function VentasSemanalesPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : tipoGrafica === 'lineas' ? (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height={ALTURA_GRAFICA}
+                  >
                     <LineChart
                       data={datosGrafica}
                       margin={{
@@ -825,7 +926,10 @@ function VentasSemanalesPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height={ALTURA_GRAFICA}
+                  >
                     <BarChart
                       data={datosGrafica}
                       margin={{
@@ -887,8 +991,24 @@ function VentasSemanalesPage() {
                   </ResponsiveContainer>
                 )}
               </div>
+            </>
+          ) : (
+            <div className="sin-datos-ventas">
+              No se encontraron registros para los filtros
+              seleccionados.
+            </div>
+          )}
+        </>
+      )}
+        </div>
 
-              <div className="bloque-tabla-ventas">
+        <aside className="columna-ventas-detalle">
+          {!cargando &&
+            !error &&
+            resultado &&
+            resultado.datos.length > 0 && (
+            <>
+              <div className="bloque-tabla-ventas tabla-detalle-semanal">
                 <h3>Detalle semanal</h3>
 
                 <div className="contenedor-tabla">
@@ -902,7 +1022,7 @@ function VentasSemanalesPage() {
                     </thead>
 
                     <tbody>
-                      {resultado.datos.map((dato) => (
+                      {datosDetallePagina.map((dato) => (
                         <tr
                           key={`${dato.semana}-${dato.referencia}`}
                         >
@@ -920,9 +1040,45 @@ function VentasSemanalesPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {totalPaginasDetalle > 1 && (
+                  <div className="paginacion-tabla">
+                    <button
+                      type="button"
+                      aria-label="Página anterior del detalle semanal"
+                      disabled={paginaDetalle === 1}
+                      onClick={() =>
+                        setPaginaDetalle((paginaActual) =>
+                          paginaActual - 1,
+                        )
+                      }
+                    >
+                      ← Anterior
+                    </button>
+
+                    <span>
+                      {paginaDetalle} de {totalPaginasDetalle}
+                    </span>
+
+                    <button
+                      type="button"
+                      aria-label="Página siguiente del detalle semanal"
+                      disabled={
+                        paginaDetalle >= totalPaginasDetalle
+                      }
+                      onClick={() =>
+                        setPaginaDetalle((paginaActual) =>
+                          paginaActual + 1,
+                        )
+                      }
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="bloque-tabla-ventas">
+              <div className="bloque-tabla-ventas tabla-total-referencias">
                 <h3>Total por referencia</h3>
 
                 <div className="contenedor-tabla">
@@ -935,7 +1091,7 @@ function VentasSemanalesPage() {
                     </thead>
 
                     <tbody>
-                      {resultado.referencias.map((item) => (
+                      {referenciasPagina.map((item) => (
                         <tr key={item.referencia}>
                           <td>{item.referencia}</td>
                           <td>
@@ -948,16 +1104,49 @@ function VentasSemanalesPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {totalPaginasReferencias > 1 && (
+                  <div className="paginacion-tabla">
+                    <button
+                      type="button"
+                      aria-label="Página anterior de referencias"
+                      disabled={paginaReferencias === 1}
+                      onClick={() =>
+                        setPaginaReferencias((paginaActual) =>
+                          paginaActual - 1,
+                        )
+                      }
+                    >
+                      ← Anterior
+                    </button>
+
+                    <span>
+                      {paginaReferencias} de{' '}
+                      {totalPaginasReferencias}
+                    </span>
+
+                    <button
+                      type="button"
+                      aria-label="Página siguiente de referencias"
+                      disabled={
+                        paginaReferencias >=
+                        totalPaginasReferencias
+                      }
+                      onClick={() =>
+                        setPaginaReferencias((paginaActual) =>
+                          paginaActual + 1,
+                        )
+                      }
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                )}
               </div>
             </>
-          ) : (
-            <div className="sin-datos-ventas">
-              No se encontraron registros para los filtros
-              seleccionados.
-            </div>
           )}
-        </>
-      )}
+        </aside>
+      </div>
     </section>
   )
 }

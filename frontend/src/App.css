@@ -1149,3 +1149,213 @@
     box-shadow: 6px 6px 0 var(--sombra-solida);
   }
 }
+
+/* Ventas semanales: aprovecha el ancho completo del navegador. */
+.contenido:has(.pagina-ventas) {
+  max-width: none;
+  padding: 22px clamp(12px, 1.25vw, 26px) 30px;
+}
+
+.pagina-ventas {
+  padding: 24px;
+}
+
+.pagina-ventas .titulo-pagina {
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+}
+
+.distribucion-ventas {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    minmax(500px, 0.9fr);
+  gap: clamp(16px, 1.15vw, 24px);
+  align-items: start;
+}
+
+.columna-ventas-principal,
+.columna-ventas-detalle {
+  min-width: 0;
+}
+
+.columna-ventas-detalle {
+  display: grid;
+  gap: 20px;
+}
+
+.columna-ventas-principal .panel-filtros-ventas {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 16px;
+}
+
+.columna-ventas-principal
+  .fila-filtros-ventas-principal {
+  grid-template-columns:
+    minmax(120px, 0.75fr)
+    minmax(120px, 0.75fr)
+    minmax(180px, 1.2fr)
+    minmax(180px, 1.2fr)
+    minmax(135px, 0.8fr);
+}
+
+.columna-ventas-principal
+  .fila-filtros-ventas-grafica {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(190px, 1fr)
+  );
+}
+
+.columna-ventas-principal .acciones-filtros-ventas {
+  align-self: stretch;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0 0 18px;
+  border-top: 0;
+  border-left: 2px solid var(--verde-borde);
+}
+
+.columna-ventas-principal
+  .acciones-filtros-ventas button {
+  width: 100%;
+}
+
+.columna-ventas-principal .grafica-ventas,
+.columna-ventas-detalle .bloque-tabla-ventas {
+  margin-top: 0;
+}
+
+.columna-ventas-principal .grafica-ventas {
+  padding: 18px;
+}
+
+.columna-ventas-detalle .bloque-tabla-ventas {
+  padding: 16px;
+}
+
+.columna-ventas-principal .resumen-ventas {
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.columna-ventas-principal .tarjeta-indicador {
+  padding: 14px 16px;
+}
+
+.columna-ventas-detalle .tabla-radicados {
+  min-width: 100%;
+}
+
+.paginacion-tabla {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--verde-borde);
+}
+
+.paginacion-tabla span {
+  color: var(--texto-secundario);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paginacion-tabla button {
+  min-height: 38px;
+  padding: 8px 12px;
+  color: var(--verde-oscuro);
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--blanco);
+  border: 2px solid var(--verde-oscuro);
+  border-radius: 2px;
+  box-shadow: 3px 3px 0 var(--mostaza);
+}
+
+.paginacion-tabla button:hover:not(:disabled) {
+  color: var(--blanco);
+  background: var(--verde-principal);
+}
+
+.paginacion-tabla button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .distribucion-ventas {
+    grid-template-columns: 1fr;
+  }
+
+  .columna-ventas-detalle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .columna-ventas-principal .panel-filtros-ventas {
+    grid-template-columns: 1fr;
+  }
+
+  .columna-ventas-principal .acciones-filtros-ventas {
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 16px 0 0;
+    border-top: 2px solid var(--verde-borde);
+    border-left: 0;
+  }
+
+  .columna-ventas-principal
+    .acciones-filtros-ventas button {
+    width: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .columna-ventas-detalle {
+    grid-template-columns: 1fr;
+  }
+
+  .columna-ventas-principal
+    .fila-filtros-ventas-principal,
+  .columna-ventas-principal
+    .fila-filtros-ventas-grafica {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .contenido:has(.pagina-ventas) {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .pagina-ventas {
+    padding: 18px 14px;
+  }
+
+  .columna-ventas-principal
+    .fila-filtros-ventas-principal,
+  .columna-ventas-principal
+    .fila-filtros-ventas-grafica {
+    grid-template-columns: 1fr;
+  }
+
+  .columna-ventas-detalle .tabla-radicados {
+    min-width: 520px;
+  }
+
+  .paginacion-tabla {
+    align-items: stretch;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .paginacion-tabla button {
+    width: 100%;
+  }
+}
