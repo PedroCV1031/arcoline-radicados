@@ -36,6 +36,7 @@ interface RespuestaVentas {
     fecha_final: string | null
     cliente: string | null
     referencia: string | null
+    talla: string | null
   }
   total_unidades: number
   total_semanas: number
@@ -56,6 +57,7 @@ interface FiltrosVentas {
   fechaFinal: string
   cliente: string
   referencia: string
+  talla: string
 }
 
 interface PuntoGrafica {
@@ -106,6 +108,7 @@ function crearFiltrosIniciales(): FiltrosVentas {
     fechaFinal: fechaLocalParaInput(hoy),
     cliente: '',
     referencia: '',
+    talla: '',
   }
 }
 
@@ -169,7 +172,10 @@ function VentasSemanalesPage() {
           '/api/radicados/opciones-filtros',
         )
 
-        setOpciones(respuesta.data)
+        setOpciones((opcionesActuales) => ({
+          ...respuesta.data,
+          tallas: opcionesActuales.tallas,
+        }))
       } catch (errorOpciones) {
         console.error(errorOpciones)
       }
@@ -177,6 +183,75 @@ function VentasSemanalesPage() {
 
     consultarOpciones()
   }, [])
+
+  useEffect(() => {
+    const referenciaSeleccionada = filtros.referencia
+    let consultaCancelada = false
+
+    if (!referenciaSeleccionada) {
+      setOpciones((opcionesActuales) => ({
+        ...opcionesActuales,
+        tallas: [],
+      }))
+
+      setFiltros((filtrosActuales) =>
+        filtrosActuales.talla
+          ? {
+              ...filtrosActuales,
+              talla: '',
+            }
+          : filtrosActuales,
+      )
+
+      return undefined
+    }
+
+    async function consultarTallasDeReferencia() {
+      try {
+        const respuesta = await api.get<OpcionesFiltros>(
+          '/api/radicados/opciones-filtros',
+          {
+            params: {
+              referencia: referenciaSeleccionada,
+            },
+          },
+        )
+
+        if (consultaCancelada) return
+
+        const tallasDisponibles = respuesta.data.tallas
+
+        setOpciones((opcionesActuales) => ({
+          ...opcionesActuales,
+          tallas: tallasDisponibles,
+        }))
+
+        setFiltros((filtrosActuales) =>
+          filtrosActuales.talla &&
+          !tallasDisponibles.includes(filtrosActuales.talla)
+            ? {
+                ...filtrosActuales,
+                talla: '',
+              }
+            : filtrosActuales,
+        )
+      } catch (errorTallas) {
+        if (consultaCancelada) return
+
+        console.error(errorTallas)
+        setOpciones((opcionesActuales) => ({
+          ...opcionesActuales,
+          tallas: [],
+        }))
+      }
+    }
+
+    consultarTallasDeReferencia()
+
+    return () => {
+      consultaCancelada = true
+    }
+  }, [filtros.referencia])
 
   useEffect(() => {
     async function consultarVentas() {
@@ -196,6 +271,7 @@ function VentasSemanalesPage() {
                 filtrosAplicados.cliente || undefined,
               referencia:
                 filtrosAplicados.referencia || undefined,
+              talla: filtrosAplicados.talla || undefined,
             },
           },
         )
@@ -265,6 +341,7 @@ function VentasSemanalesPage() {
       fechaFinal: '',
       cliente: '',
       referencia: '',
+      talla: '',
     }
 
     setFiltros(filtrosLimpios)
@@ -450,6 +527,7 @@ function VentasSemanalesPage() {
                   setFiltros((actuales) => ({
                     ...actuales,
                     referencia: evento.target.value,
+                    talla: '',
                   }))
                 }
               >
@@ -458,6 +536,34 @@ function VentasSemanalesPage() {
                 {opciones.referencias.map((referencia) => (
                   <option key={referencia} value={referencia}>
                     {referencia}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="ventaTalla">Talla</label>
+
+              <select
+                id="ventaTalla"
+                value={filtros.talla}
+                disabled={!filtros.referencia}
+                onChange={(evento) =>
+                  setFiltros((actuales) => ({
+                    ...actuales,
+                    talla: evento.target.value,
+                  }))
+                }
+              >
+                <option value="">
+                  {filtros.referencia
+                    ? 'Todas'
+                    : 'Seleccione una referencia'}
+                </option>
+
+                {opciones.tallas.map((talla) => (
+                  <option key={talla} value={talla}>
+                    {talla}
                   </option>
                 ))}
               </select>

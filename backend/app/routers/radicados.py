@@ -40,7 +40,41 @@ def organizar_opciones(valores: list) -> list[str]:
 
 
 @router.get("/opciones-filtros")
-def consultar_opciones_filtros():
+def consultar_opciones_filtros(
+    referencia: str | None = None,
+):
+    filtros_tallas: dict = {}
+
+    if referencia:
+        filtros_tallas["$expr"] = {
+            "$eq": [
+                {
+                    "$toUpper": {
+                        "$trim": {
+                            "input": {
+                                "$convert": {
+                                    "input": "$Referencia",
+                                    "to": "string",
+                                    "onError": "",
+                                    "onNull": "",
+                                }
+                            }
+                        }
+                    }
+                },
+                referencia.strip().upper(),
+            ]
+        }
+
+    tallas = (
+        radicados_collection.distinct(
+            "Talla",
+            filtros_tallas,
+        )
+        if referencia
+        else []
+    )
+
     return {
         "clientes": organizar_opciones(
             radicados_collection.distinct("Cliente")
@@ -53,9 +87,7 @@ def consultar_opciones_filtros():
                 "_metadatos.hoja_origen"
             )
         ),
-        "tallas": organizar_opciones(
-            radicados_collection.distinct("Talla")
-        ),
+        "tallas": organizar_opciones(tallas),
     }
 
 

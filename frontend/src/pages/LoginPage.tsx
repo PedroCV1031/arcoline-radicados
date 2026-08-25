@@ -68,7 +68,6 @@ function LoginPage({ onLogin }: LoginPageProps) {
 
         <div className="encabezado-login">
           <h1>Iniciar sesión</h1>
-          <p>Ingresa para acceder a la plataforma.</p>
         </div>
 
         <form

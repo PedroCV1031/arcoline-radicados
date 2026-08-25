@@ -113,7 +113,10 @@ function RadicadosPage() {
           '/api/radicados/opciones-filtros',
         )
 
-        setOpciones(respuesta.data)
+        setOpciones((opcionesActuales) => ({
+          ...respuesta.data,
+          tallas: opcionesActuales.tallas,
+        }))
       } catch (errorOpciones) {
         console.error(
           'No fue posible cargar las opciones:',
@@ -124,6 +127,79 @@ function RadicadosPage() {
 
     consultarOpciones()
   }, [])
+
+  useEffect(() => {
+    const referenciaSeleccionada = filtros.referencia
+    let consultaCancelada = false
+
+    if (!referenciaSeleccionada) {
+      setOpciones((opcionesActuales) => ({
+        ...opcionesActuales,
+        tallas: [],
+      }))
+
+      setFiltros((filtrosActuales) =>
+        filtrosActuales.talla
+          ? {
+              ...filtrosActuales,
+              talla: '',
+            }
+          : filtrosActuales,
+      )
+
+      return undefined
+    }
+
+    async function consultarTallasDeReferencia() {
+      try {
+        const respuesta = await api.get<OpcionesFiltros>(
+          '/api/radicados/opciones-filtros',
+          {
+            params: {
+              referencia: referenciaSeleccionada,
+            },
+          },
+        )
+
+        if (consultaCancelada) return
+
+        const tallasDisponibles = respuesta.data.tallas
+
+        setOpciones((opcionesActuales) => ({
+          ...opcionesActuales,
+          tallas: tallasDisponibles,
+        }))
+
+        setFiltros((filtrosActuales) =>
+          filtrosActuales.talla &&
+          !tallasDisponibles.includes(filtrosActuales.talla)
+            ? {
+                ...filtrosActuales,
+                talla: '',
+              }
+            : filtrosActuales,
+        )
+      } catch (errorTallas) {
+        if (consultaCancelada) return
+
+        console.error(
+          'No fue posible cargar las tallas:',
+          errorTallas,
+        )
+
+        setOpciones((opcionesActuales) => ({
+          ...opcionesActuales,
+          tallas: [],
+        }))
+      }
+    }
+
+    consultarTallasDeReferencia()
+
+    return () => {
+      consultaCancelada = true
+    }
+  }, [filtros.referencia])
 
   useEffect(() => {
     async function consultarRadicados() {
@@ -243,10 +319,11 @@ function RadicadosPage() {
                 id="referencia"
                 value={filtros.referencia}
                 onChange={(evento) =>
-                  actualizarFiltro(
-                    'referencia',
-                    evento.target.value,
-                  )
+                  setFiltros((filtrosActuales) => ({
+                    ...filtrosActuales,
+                    referencia: evento.target.value,
+                    talla: '',
+                  }))
                 }
               >
                 <option value="">Todas</option>
@@ -264,11 +341,16 @@ function RadicadosPage() {
               <select
                 id="talla"
                 value={filtros.talla}
+                disabled={!filtros.referencia}
                 onChange={(evento) =>
                   actualizarFiltro('talla', evento.target.value)
                 }
               >
-                <option value="">Todas</option>
+                <option value="">
+                  {filtros.referencia
+                    ? 'Todas'
+                    : 'Seleccione una referencia'}
+                </option>
 
                 {opciones.tallas.map((talla) => (
                   <option key={talla} value={talla}>

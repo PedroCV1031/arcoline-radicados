@@ -356,8 +356,9 @@
   grid-template-columns:
     minmax(145px, 0.75fr)
     minmax(145px, 0.75fr)
-    minmax(220px, 1.35fr)
-    minmax(220px, 1.35fr);
+    minmax(210px, 1.25fr)
+    minmax(210px, 1.25fr)
+    minmax(140px, 0.7fr);
 }
 
 .fila-filtros-ventas-grafica {
@@ -745,7 +746,6 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  content: 'ACCESO INTERNO';
 }
 
 .logo-login {
