@@ -172,7 +172,7 @@ function obtenerMensajeError(error: unknown): string {
     return detalle
   }
 
-  return 'No fue posible consultar las ventas semanales.'
+  return 'No fue posible consultar la produccion.'
 }
 
 function VentasSemanalesPage() {
@@ -536,7 +536,7 @@ function VentasSemanalesPage() {
     <section className="pagina-ventas">
       <div className="titulo-pagina">
         <div>
-          <h2>Ventas semanales</h2>
+          <h2>Produccion por semanas</h2>
           <p>
             Unidades radicadas agrupadas segun los filtros
           </p>
@@ -763,7 +763,7 @@ function VentasSemanalesPage() {
 
       {cargando && (
         <div className="mensaje-estado">
-          Consultando ventas semanales...
+          Consultando produccion...
         </div>
       )}
 

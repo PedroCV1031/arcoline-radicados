@@ -108,8 +108,8 @@ function App() {
               Radicados
             </NavLink>
 
-            <NavLink to="/ventas-semanales">
-              Ventas semanales
+            <NavLink to="/produccion-semanal">
+              Produccion semanal
             </NavLink>
           </nav>
 
@@ -146,7 +146,7 @@ function App() {
           />
 
           <Route
-            path="/ventas-semanales"
+            path="/produccion-semanal"
             element={<VentasSemanalesPage />}
           />
 
