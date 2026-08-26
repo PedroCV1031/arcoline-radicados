@@ -1,0 +1,216 @@
+[33mcommit e1cb4aba4bc096143b20a21838588185dae1cf7c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdesarrollo/tipos-estados-entrega[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/desarrollo/tipos-estados-entrega[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Tue Aug 25 15:28:48 2026 -0500
+
+    Correxion errores sintaxis
+
+[33mcommit ec47f0e969aec1c957a9d134d36d4e446e51f835[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Tue Aug 25 10:41:38 2026 -0500
+
+    Mejora graficas
+
+[33mcommit 935d71dc548d07f3b50d4568321c614810febadb[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Tue Aug 25 09:42:46 2026 -0500
+
+    Mejora filtros
+
+[33mcommit 7ee37223e632863b4d738e59baee944b3e90d4dd[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 15:48:39 2026 -0500
+
+    Mejora legibilidad texto + agregar fondo
+
+[33mcommit 27c9e592ff3451dd6f12aae273dce51214222238[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 14:51:52 2026 -0500
+
+    Actualizacion estilo visual
+
+[33mcommit 34be6d0644c9f8d500572b37f1fafdb3ac14fa75[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 12:11:28 2026 -0500
+
+    Agregar documentación principal del proyecto
+
+[33mcommit e4686ea0f1a31c8c1f683881c649f69502d94489[m[33m ([m[1;33mtag: [m[1;33mv1.0.0[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:46:45 2026 -0500
+
+    Configurar rutas del frontend en Vercel
+
+[33mcommit f8e8f90c9f41b9dda80bcc270590b30f71d3b5e5[m
+Merge: 464023d 3e0cca3
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:40:09 2026 -0500
+
+    Merge pull request #9 from PedroCV1031/desarrollo/despliegue
+    
+    Preparar autenticación para despliegue
+
+[33mcommit 3e0cca38f15fed7ed3436f4d964abc47d6981a9c[m[33m ([m[1;31morigin/desarrollo/despliegue[m[33m, [m[1;32mdesarrollo/despliegue[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:39:48 2026 -0500
+
+    Preparar autenticación para despliegue
+
+[33mcommit 464023d2a269f577ceeb15f2ef6be3e05da2943a[m
+Merge: 9aba685 2343d48
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:31:01 2026 -0500
+
+    Merge pull request #8 from PedroCV1031/desarrollo/autenticacion
+    
+    Agregar autenticacion y proteccion de rutas
+
+[33mcommit 2343d48cd4393e301270b244dec10b7474c20908[m[33m ([m[1;31morigin/desarrollo/autenticacion[m[33m, [m[1;32mdesarrollo/autenticacion[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:30:30 2026 -0500
+
+    Agregar autenticacion y proteccion de rutas
+
+[33mcommit 9aba685ba2044ab2c92f64ea68b071deb403c037[m
+Merge: 65daf0a 911f23a
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:10:59 2026 -0500
+
+    Merge pull request #7 from PedroCV1031/desarrollo/mejoras-graficas
+    
+    Mejorar graficas y experiencia de importacion
+
+[33mcommit 911f23ac944f24547e8e13fb551021090a5f979c[m[33m ([m[1;31morigin/desarrollo/mejoras-graficas[m[33m, [m[1;32mdesarrollo/mejoras-graficas[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 11:10:32 2026 -0500
+
+    Mejorar graficas y experiencia de importacion
+
+[33mcommit 65daf0a280cc45681620aedf084eb9d8e08d4921[m
+Merge: c82ea80 6a6e3c2
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 10:14:39 2026 -0500
+
+    Merge pull request #6 from PedroCV1031/mantenimiento/limpieza
+    
+    Eliminar archivos no utilizados
+
+[33mcommit c82ea806bd265814254ccbaa693bdbc56922cf3e[m
+Merge: fb882a1 6707154
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 10:14:18 2026 -0500
+
+    Merge pull request #5 from PedroCV1031/desarrollo/frontend
+    
+    Completar filtros y validación de importación
+
+[33mcommit 6a6e3c2bcc6fdcae9ac0db9c9f0607c914986bac[m[33m ([m[1;31morigin/mantenimiento/limpieza[m[33m, [m[1;32mmantenimiento/limpieza[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 10:08:48 2026 -0500
+
+    Eliminar archivos no utilizados
+
+[33mcommit 67071545dddeed033d5cb41483442f28d238058f[m[33m ([m[1;31morigin/desarrollo/frontend[m[33m, [m[1;32mdesarrollo/frontend[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Mon Aug 24 09:59:24 2026 -0500
+
+    Completar filtros y validación de importación
+
+[33mcommit fb882a1004d19d75f463230d9af09b3c96445c99[m
+Merge: 8ed6148 3eb08e4
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 10:46:41 2026 -0500
+
+    Merge pull request #4 from PedroCV1031/desarrollo/frontend
+
+[33mcommit 3eb08e4ea99d8369429f736cfdafb9fd5abaafdf[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 10:43:38 2026 -0500
+
+    Agregar panel de ventas semanales con graficas
+
+[33mcommit e26e27aa906898a0f6033105f179d06fe49ff262[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 10:31:04 2026 -0500
+
+    Agregar importación de Excel desde el frontend
+
+[33mcommit 48395485e9940841acb09c0301e51fcf384d08da[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 10:15:23 2026 -0500
+
+    Agregar consulta filtrada de radicados en frontend
+
+[33mcommit fa6804f4f7d922fcc1a6e3d42cd0e743636387a8[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 09:53:27 2026 -0500
+
+    Organizacion archivos
+
+[33mcommit ec354700961da06146acdab494b775c610994c94[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Fri Aug 21 09:52:00 2026 -0500
+
+    Conectar frontend con consulta paginada de radicados
+
+[33mcommit 8ed6148f61f6f922d8922da5c93462cfd085c587[m
+Merge: 0a2c3be ad09f40
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:47:24 2026 -0500
+
+    Merge pull request #3 from PedroCV1031/desarrollo/ventas-semanales
+    
+    Agregar ventas semanales por referencia
+
+[33mcommit ad09f40f51d594f9cac5eb621e4413ab9f677658[m[33m ([m[1;31morigin/desarrollo/ventas-semanales[m[33m, [m[1;32mdesarrollo/ventas-semanales[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:46:49 2026 -0500
+
+    Agregar consulta de ventas semanales por referencia
+
+[33mcommit 0a2c3be1cef5b3fa7b4cd665cf27e5995ea006f4[m
+Merge: b107396 d891b5a
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:41:47 2026 -0500
+
+    Merge pull request #2 from PedroCV1031/desarrollo/radicados
+    
+    Agregar consulta e importación de radicados
+
+[33mcommit d891b5a93e4d180786a21f4e6eefda6224260859[m[33m ([m[1;31morigin/desarrollo/radicados[m[33m, [m[1;32mdesarrollo/radicados[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:40:43 2026 -0500
+
+    Agregar reemplazo seguro de hojas desde Excel
+
+[33mcommit 5bfc9f2a67e15dea2dfb82bbea911c084db38eda[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:22:57 2026 -0500
+
+    Agregar consulta paginada de radicados
+
+[33mcommit b107396933fe004b4dc157fb252d7f90b48ab763[m
+Merge: ad9059e 166e51a
+Author: PedroCV1031 <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:15:00 2026 -0500
+
+    Merge pull request #1 from PedroCV1031/desarrollo/ventas-semanales
+    
+    Configurar estructura inicial de frontend y backend
+
+[33mcommit 166e51a97c91fda1ee1d32b0d313915bf7634e66[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:11:43 2026 -0500
+
+    Corregir configuración inicial del proyecto
+
+[33mcommit c864c5cc5a6431ed0054cc7a014d323a465cd43e[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 16:04:02 2026 -0500
+
+    Configurar frontend React y estructura del backend
+
+[33mcommit ad9059ed937e8d4e6e4d208b1cf59c072112fe36[m[33m ([m[1;31morigin/desarrollo/backend-mongodb[m[33m, [m[1;32mdesarrollo/importacion-excel[m[33m, [m[1;32mdesarrollo/backend-mongodb[m[33m)[m
+Author: Pedro <vcpedro2003@gmail.com>
+Date:   Thu Aug 20 15:49:40 2026 -0500
+
+    Crear estructura inicial del proyecto
