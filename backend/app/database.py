@@ -24,3 +24,4 @@ client = MongoClient(
 
 database = client[MONGODB_DATABASE]
 radicados_collection = database[MONGODB_COLLECTION]
+configuracion_collection = database["configuracion"]

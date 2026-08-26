@@ -9,7 +9,12 @@ from app.auth import (
     router as auth_router,
 )
 from app.database import client
-from app.routers import importaciones, radicados, ventas
+from app.routers import (
+    configuracion,
+    importaciones,
+    radicados,
+    ventas,
+)
 
 
 load_dotenv()
@@ -46,6 +51,11 @@ app.include_router(
 
 app.include_router(
     ventas.router,
+    dependencies=[Depends(obtener_usuario_actual)],
+)
+
+app.include_router(
+    configuracion.router,
     dependencies=[Depends(obtener_usuario_actual)],
 )
 

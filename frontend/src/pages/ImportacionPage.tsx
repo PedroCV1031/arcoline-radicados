@@ -12,6 +12,9 @@ interface RespuestaHojas {
 
 interface ResultadoHoja {
   hoja: string
+  filas_leidas: number
+  filas_rechazadas: number
+  filas_corregidas: number
   registros_eliminados: number
   registros_insertados: number
 }
@@ -23,6 +26,8 @@ interface ResultadoImportacion {
   hojas_procesadas: ResultadoHoja[]
   total_insertados: number
   total_eliminados: number
+  total_rechazados: number
+  total_corregidos: number
 }
 
 function obtenerMensajeError(error: unknown): string {
@@ -37,16 +42,14 @@ function obtenerMensajeError(error: unknown): string {
   }
 
   if (detalle?.mensaje) {
-    const hojasInvalidas = detalle.hojas_invalidas?.join(', ')
     const columnasFaltantes =
       detalle.columnas_faltantes?.join(', ')
 
-    if (hojasInvalidas) {
-      return `${detalle.mensaje}: ${hojasInvalidas}`
-    }
-
     if (columnasFaltantes) {
-      return `${detalle.mensaje}. Columnas faltantes: ${columnasFaltantes}`
+      return (
+        `${detalle.mensaje}. Columnas faltantes: ` +
+        columnasFaltantes
+      )
     }
 
     return detalle.mensaje
@@ -348,6 +351,32 @@ function ImportacionPage() {
         <div className="resultado-importacion">
           <h3>{resultado.mensaje}</h3>
 
+          {resultado.total_rechazados > 0 && (
+            <div className="mensaje-advertencia">
+              Se rechazaron{' '}
+              <strong>
+                {resultado.total_rechazados.toLocaleString(
+                  'es-CO',
+                )}
+              </strong>{' '}
+              filas porque no contenían la información mínima
+              requerida o tenían valores inválidos.
+            </div>
+          )}
+
+          {resultado.total_corregidos > 0 && (
+            <div className="mensaje-informativo">
+              Se corrigieron automáticamente{' '}
+              <strong>
+                {resultado.total_corregidos.toLocaleString(
+                  'es-CO',
+                )}
+              </strong>{' '}
+              filas en las que las unidades despachadas superaban
+              la cantidad recibida.
+            </div>
+          )}
+
           <div className="resumen-importacion">
             <div className="tarjeta-resumen">
               <span>Registros insertados</span>
@@ -366,6 +395,24 @@ function ImportacionPage() {
                 )}
               </strong>
             </div>
+
+            <div className="tarjeta-resumen">
+              <span>Filas rechazadas</span>
+              <strong>
+                {resultado.total_rechazados.toLocaleString(
+                  'es-CO',
+                )}
+              </strong>
+            </div>
+
+            <div className="tarjeta-resumen">
+              <span>Filas corregidas</span>
+              <strong>
+                {resultado.total_corregidos.toLocaleString(
+                  'es-CO',
+                )}
+              </strong>
+            </div>
           </div>
 
           <div className="contenedor-tabla">
@@ -373,8 +420,11 @@ function ImportacionPage() {
               <thead>
                 <tr>
                   <th>Hoja</th>
-                  <th>Eliminados</th>
-                  <th>Insertados</th>
+                  <th>Filas leídas</th>
+                  <th>Rechazadas</th>
+                  <th>Corregidas</th>
+                  <th>Eliminadas</th>
+                  <th>Insertadas</th>
                 </tr>
               </thead>
 
@@ -382,11 +432,31 @@ function ImportacionPage() {
                 {resultado.hojas_procesadas.map((hoja) => (
                   <tr key={hoja.hoja}>
                     <td>{hoja.hoja}</td>
+
+                    <td>
+                      {hoja.filas_leidas.toLocaleString(
+                        'es-CO',
+                      )}
+                    </td>
+
+                    <td>
+                      {hoja.filas_rechazadas.toLocaleString(
+                        'es-CO',
+                      )}
+                    </td>
+
+                    <td>
+                      {hoja.filas_corregidas.toLocaleString(
+                        'es-CO',
+                      )}
+                    </td>
+
                     <td>
                       {hoja.registros_eliminados.toLocaleString(
                         'es-CO',
                       )}
                     </td>
+
                     <td>
                       {hoja.registros_insertados.toLocaleString(
                         'es-CO',
