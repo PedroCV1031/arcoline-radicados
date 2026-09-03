@@ -1,6 +1,6 @@
 # Arcoline Radicados
 
-Aplicación web interna para gestionar los radicados de producción de Arcoline. Permite importar información desde Excel, consultar los registros almacenados en MongoDB Atlas, controlar el estado de las entregas y analizar la producción semanal por referencia.
+Aplicación web interna para gestionar los radicados de producción de Arcoline. Permite importar y exportar información en Excel, consultar los registros almacenados en MongoDB Atlas, controlar el estado de las entregas y analizar la producción semanal por referencia, cliente o área.
 
 ## Aplicación desplegada
 
@@ -20,24 +20,32 @@ Todas las funciones de la plataforma requieren autenticación.
 - Contraseña almacenada como hash Argon2.
 - Protección de los endpoints de la aplicación.
 
-### Importación de Excel
+### Importación y exportación de Excel
 
 - Carga de archivos `.xlsx` y `.xlsm` de hasta 20 MB.
 - Detección automática de las hojas que cumplen la estructura requerida.
 - Selección de una o varias hojas válidas.
-- Reemplazo de los registros existentes de cada hoja seleccionada.
+- Actualización selectiva: solo se insertan registros nuevos o se actualizan registros cuyo contenido cambió.
+- Conservación de los registros sin cambios para reducir escrituras en MongoDB.
+- Identidad interna calculada por la aplicación; el Excel no necesita una columna de identificador.
+- Asignación progresiva de claves internas a registros antiguos cuando vuelven a ser analizados.
+- Detección y rechazo de filas duplicadas dentro del Excel y de coincidencias ambiguas causadas por duplicados ya existentes en MongoDB.
 - Validación individual de las filas antes de insertarlas.
 - Rechazo de filas incompletas o con valores inválidos.
 - Corrección automática de unidades despachadas superiores a la cantidad recibida.
-- Resumen de filas leídas, rechazadas, corregidas, eliminadas e insertadas.
+- Resumen de filas leídas, rechazadas, corregidas, insertadas, actualizadas, sin cambios y con clave asignada.
 - Metadatos de trazabilidad para cada registro importado.
+- Exportación de una o varias hojas de origen almacenadas en MongoDB.
+- Generación de un libro con una hoja por origen, apto para volver a importarse.
+- Exportación consolidada en una sola hoja con la columna adicional `Hoja de origen`; este formato es de consulta y no puede reimportarse directamente.
+- Salida en formato de tabla de Excel, con encabezados, filtros y anchos de columna preparados.
 
 ### Consulta de radicados
 
 - Tabla paginada de los registros almacenados en MongoDB.
 - Visualización de fecha de ingreso, fecha límite y fecha de entrega.
-- Visualización de cliente, orden de compra, referencia, talla, tipo, cantidades, unidades pendientes, estado y hoja de origen.
-- Filtros por cliente, orden de compra, referencia, talla, tipo, hoja de origen, fechas de ingreso y estado.
+- Visualización de cliente, orden de compra, área, referencia, talla, tipo, cantidades, unidades pendientes, estado y hoja de origen.
+- Filtros por cliente, orden de compra, área, referencia, talla, tipo, hoja de origen, fechas de ingreso y estado.
 - Ordenamiento ascendente o descendente por diferentes campos.
 - Selección de la cantidad de registros por página.
 - Colores diferenciados para representar el estado de cada radicado.
@@ -45,25 +53,28 @@ Todas las funciones de la plataforma requieren autenticación.
 
 ### Producción semanal
 
-- Agrupación de unidades por semana y referencia, sin separar automáticamente por talla.
-- Filtros por periodo, cliente, referencia, talla y tipo.
+- Agrupación de unidades por semana y referencia, cliente o área, sin separar automáticamente por talla.
+- Filtros por periodo, cliente, área, referencia, talla y tipo.
 - Inclusión de semanas sin producción dentro del periodo seleccionado.
-- Selección de la cantidad de referencias visibles.
-- Agrupación de las referencias restantes como `OTRAS`.
+- Redondeo de las cantidades a unidades enteras para evitar decimales producidos por errores humanos de digitación.
+- Selección de la cantidad de categorías visibles según la agrupación elegida.
+- Agrupación de las categorías restantes como `OTRAS` u `OTROS`, según corresponda.
 - Gráficas de barras apiladas, barras agrupadas, líneas y torta.
-- La gráfica de torta se limita a una sola semana.
-- Tablas paginadas con el detalle semanal y los totales por referencia.
+- La gráfica de torta se limita a una sola semana e incluye una leyenda con categoría, porcentaje y unidades.
+- Las semanas se presentan como intervalos completos, por ejemplo `24/08/26–30/08/26`.
+- Tablas paginadas con el detalle semanal y los totales por la categoría seleccionada.
 - Fechas iniciales configuradas automáticamente con el mes actual.
 
 ## Reglas de filtros dependientes
 
-Los filtros de referencia, talla y tipo respetan estas reglas:
+Los filtros de área, referencia, talla y tipo respetan estas reglas:
 
 - Sin referencia seleccionada, los filtros de talla y tipo permanecen deshabilitados.
 - Con una referencia específica, se habilitan talla y tipo.
 - Las tallas disponibles corresponden únicamente a la referencia seleccionada.
 - Al seleccionar referencia y talla, los tipos disponibles corresponden a esa combinación.
 - La opción de todas las referencias permite filtrar por tipo sin exigir una talla.
+- El filtro de área es independiente y utiliza los valores normalizados almacenados en mayúsculas.
 
 ## Estados de los radicados
 
@@ -267,14 +278,15 @@ Una hoja se considera válida únicamente si su primera fila contiene exactament
 2. `Fecha limite`
 3. `Cliente`
 4. `Orden de compra`
-5. `Referencia`
-6. `Talla`
-7. `Tipo`
-8. `Cantidad`
-9. `Unidades despachadas`
-10. `Fecha entrega final`
+5. `Area`
+6. `Referencia`
+7. `Talla`
+8. `Tipo`
+9. `Cantidad`
+10. `Unidades despachadas`
+11. `Fecha entrega final`
 
-La columna `Tipo` debe existir, aunque sus celdas pueden estar vacías. Las hojas que no cumplen la estructura no se muestran como opciones de importación.
+Las columnas `Area` y `Tipo` deben existir. `Area` es obligatoria en cada fila y se almacena internamente en mayúsculas; `Tipo` puede quedar vacío. Las hojas que no cumplen la estructura no se muestran como opciones de importación.
 
 ### Requisitos mínimos de cada fila
 
@@ -282,6 +294,7 @@ Para ser importada, una fila debe contener valores válidos en:
 
 - `Fecha ingreso`
 - `Cliente`
+- `Area`
 - `Referencia`
 - `Talla`
 - `Cantidad`
@@ -290,16 +303,33 @@ Las fechas y los valores numéricos también se validan. Las filas que no cumple
 
 Si `Unidades despachadas` supera a `Cantidad`, el valor se corrige automáticamente para que sea igual a `Cantidad` y la corrección se informa en el resultado de la importación.
 
+### Identidad y duplicados
+
+El identificador de MongoDB (`_id`) y las claves auxiliares son internos: no se leen desde el Excel ni deben añadirse como columnas. Para reconocer un mismo registro, la aplicación genera una clave determinística a partir de la hoja de origen y de estos campos:
+
+- `Fecha ingreso`
+- `Cliente`
+- `Orden de compra`
+- `Referencia`
+- `Talla`
+- `Cantidad`
+
+`Area`, `Tipo`, fechas de entrega y unidades despachadas forman parte del contenido que puede actualizarse, pero no cambian la identidad del registro. Si una misma clave aparece más de una vez dentro de una hoja del Excel, las repeticiones se rechazan indicando la fila original. Si la clave coincide con varios documentos ya duplicados en MongoDB, la fila también se rechaza y se informa claramente para evitar una actualización ambigua.
+
+Los registros existentes que todavía no tengan claves internas no requieren una migración manual: cuando una hoja vuelve a importarse, la aplicación calcula y asigna esas claves dentro de la misma actualización.
+
 ### Comportamiento de la importación
 
 1. El usuario selecciona un archivo.
 2. El backend identifica las hojas válidas.
 3. El usuario selecciona las hojas que desea cargar.
 4. La plataforma solicita confirmación explícita.
-5. Cada hoja se valida completamente antes de modificar MongoDB.
-6. Se eliminan los documentos cuya hoja de origen coincide con la hoja seleccionada.
-7. Se insertan las filas aceptadas con sus metadatos de trazabilidad.
-8. La interfaz informa las filas leídas, rechazadas y corregidas, además de los registros eliminados e insertados.
+5. Todas las hojas seleccionadas se validan antes de modificar MongoDB.
+6. Cada fila aceptada se compara con los documentos existentes de su hoja de origen.
+7. Los registros nuevos se insertan, los modificados se actualizan y los idénticos permanecen sin escrituras de contenido.
+8. Los registros que existen en MongoDB pero no aparecen en el archivo no se eliminan automáticamente.
+9. Las operaciones se ejecutan dentro de una transacción para evitar actualizaciones parciales entre las hojas seleccionadas.
+10. La interfaz informa las filas leídas, rechazadas y corregidas, además de los registros insertados, actualizados, sin cambios y con identidad asignada.
 
 Cada documento importado incluye:
 
@@ -314,6 +344,17 @@ Cada documento importado incluye:
   }
 }
 ```
+
+Los registros actualizados conservan su `_id`. Su trazabilidad añade la fecha y el lote de la última actualización, mientras que los registros sin cambios conservan sus datos anteriores.
+
+### Comportamiento de la exportación
+
+1. El usuario cambia la operación de `Importar` a `Exportar`.
+2. La plataforma consulta las hojas de origen disponibles y muestra cuántos registros contiene cada una.
+3. El usuario selecciona una o varias hojas.
+4. Puede generar una hoja de Excel por cada hoja de origen o consolidar todo en una sola hoja.
+5. En el modo por hojas, el archivo conserva exactamente la estructura importable descrita anteriormente.
+6. En el modo consolidado, se agrega `Hoja de origen` como primera columna y el archivo se destina a consulta; para reimportarlo habría que separarlo nuevamente y recuperar la estructura exacta.
 
 ## Endpoints principales
 
@@ -337,13 +378,15 @@ Cada documento importado incluye:
 | Método | Ruta | Función |
 |---|---|---|
 | `POST` | `/api/importaciones/hojas` | Analiza un archivo y devuelve sus hojas válidas. |
-| `POST` | `/api/importaciones/cargar` | Valida, reemplaza e importa las hojas confirmadas. |
+| `POST` | `/api/importaciones/cargar` | Valida y actualiza selectivamente las hojas confirmadas. |
+| `GET` | `/api/importaciones/exportacion/hojas` | Lista las hojas de origen disponibles y su cantidad de registros. |
+| `POST` | `/api/importaciones/exportar` | Genera y descarga el libro Excel solicitado. |
 
 ### Producción semanal
 
 | Método | Ruta | Función |
 |---|---|---|
-| `GET` | `/api/ventas/semanales` | Agrupa las unidades por semana y referencia. |
+| `GET` | `/api/ventas/semanales` | Agrupa las unidades por semana y por referencia, cliente o área. |
 
 ### Configuración
 
