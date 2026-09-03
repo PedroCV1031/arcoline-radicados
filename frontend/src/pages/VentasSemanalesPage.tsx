@@ -23,27 +23,28 @@ import api from '../services/api'
 const TODAS_LAS_REFERENCIAS = '__todas__'
 const FILAS_POR_PAGINA = 8
 const ALTURA_GRAFICA = 598
+const COLOR_OTRAS = '#6b7280'
 
 const COLORES_GRAFICA = [
   '#08783f',
   '#c0007f',
-  '#2f855a',
   '#2563eb',
   '#d97706',
   '#7c3aed',
   '#0891b2',
   '#dc2626',
+  '#92400e',
 ]
 
 
 interface DatoSemanal {
   semana: string
-  referencia: string
+  categoria: string
   unidades: number
 }
 
-interface ResumenReferencia {
-  referencia: string
+interface ResumenCategoria {
+  categoria: string
   unidades: number
 }
 
@@ -52,20 +53,23 @@ interface RespuestaVentas {
     fecha_inicial: string | null
     fecha_final: string | null
     cliente: string | null
+    area: string | null
     referencia: string | null
     talla: string | null
     tipo: string | null
+    agrupar_por: Agrupacion
   }
   total_unidades: number
   total_semanas: number
-  total_referencias: number
+  total_categorias: number
   semanas: string[]
-  referencias: ResumenReferencia[]
+  categorias: ResumenCategoria[]
   datos: DatoSemanal[]
 }
 
 interface OpcionesFiltros {
   clientes: string[]
+  areas: string[]
   referencias: string[]
   hojas: string[]
   tallas: string[]
@@ -76,6 +80,7 @@ interface FiltrosVentas {
   fechaInicial: string
   fechaFinal: string
   cliente: string
+  area: string
   referencia: string
   talla: string
   tipo: string
@@ -83,13 +88,15 @@ interface FiltrosVentas {
 
 interface PuntoGrafica {
   semana: string
-  [referencia: string]: string | number
+  [categoria: string]: string | number
 }
 
 interface PuntoTorta {
-  referencia: string
+  categoria: string
   unidades: number
 }
+
+type Agrupacion = 'referencia' | 'cliente' | 'area'
 
 type TipoGrafica =
   | 'barras-apiladas'
@@ -126,6 +133,7 @@ function crearFiltrosIniciales(): FiltrosVentas {
     ),
     fechaFinal: fechaLocalParaInput(hoy),
     cliente: '',
+    area: '',
     referencia: '',
     talla: '',
     tipo: '',
@@ -138,17 +146,54 @@ function formatearSemana(fecha: string): string {
     .split('-')
     .map(Number)
 
-  const fechaLocal = new Date(
+  const fechaInicial = new Date(Date.UTC(
     anio,
     mes - 1,
     dia,
+  ))
+
+  const fechaFinal = new Date(fechaInicial)
+  fechaFinal.setUTCDate(
+    fechaFinal.getUTCDate() + 6,
   )
 
-  return fechaLocal.toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+  function formatearFechaCorta(
+    fechaActual: Date,
+  ): string {
+    const diaActual = String(
+      fechaActual.getUTCDate(),
+    ).padStart(2, '0')
+
+    const mesActual = String(
+      fechaActual.getUTCMonth() + 1,
+    ).padStart(2, '0')
+
+    const anioActual = String(
+      fechaActual.getUTCFullYear(),
+    ).slice(-2)
+
+    return `${diaActual}/${mesActual}/${anioActual}`
+  }
+
+  return (
+    `${formatearFechaCorta(fechaInicial)}–` +
+    formatearFechaCorta(fechaFinal)
+  )
+}
+
+
+function colorDeCategoria(
+  categoria: string,
+  indice: number,
+  categoriaOtras: string,
+): string {
+  if (categoria === categoriaOtras) {
+    return COLOR_OTRAS
+  }
+
+  return COLORES_GRAFICA[
+    indice % COLORES_GRAFICA.length
+  ]
 }
 
 
@@ -181,6 +226,7 @@ function VentasSemanalesPage() {
   const [opciones, setOpciones] =
     useState<OpcionesFiltros>({
       clientes: [],
+      areas: [],
       referencias: [],
       hojas: [],
       tallas: [],
@@ -191,14 +237,17 @@ function VentasSemanalesPage() {
     useState<RespuestaVentas | null>(null)
 
   const [
-    cantidadReferencias,
-    setCantidadReferencias,
+    cantidadCategorias,
+    setCantidadCategorias,
   ] = useState(5)
 
   const [tipoGrafica, setTipoGrafica] =
     useState<TipoGrafica>(
       'barras-apiladas',
     )
+
+  const [agruparPor, setAgruparPor] =
+    useState<Agrupacion>('referencia')
 
   const [semanaTorta, setSemanaTorta] =
     useState('')
@@ -207,8 +256,8 @@ function VentasSemanalesPage() {
     useState(1)
 
   const [
-    paginaReferencias,
-    setPaginaReferencias,
+    paginaCategorias,
+    setPaginaCategorias,
   ] = useState(1)
 
   const [cargando, setCargando] =
@@ -362,6 +411,9 @@ function VentasSemanalesPage() {
                 cliente:
                   filtrosAplicados.cliente ||
                   undefined,
+                area:
+                  filtrosAplicados.area ||
+                  undefined,
                 referencia:
                   filtrosAplicados
                     .referencia ||
@@ -372,6 +424,7 @@ function VentasSemanalesPage() {
                 tipo:
                   filtrosAplicados.tipo ||
                   undefined,
+                agrupar_por: agruparPor,
               },
             },
           )
@@ -388,21 +441,21 @@ function VentasSemanalesPage() {
     }
 
     consultarVentas()
-  }, [filtrosAplicados])
+  }, [filtrosAplicados, agruparPor])
 
 
   useEffect(() => {
     if (!resultado) return
 
     setPaginaDetalle(1)
-    setPaginaReferencias(1)
+    setPaginaCategorias(1)
 
     const maximo = Math.max(
-      resultado.total_referencias,
+      resultado.total_categorias,
       1,
     )
 
-    setCantidadReferencias(
+    setCantidadCategorias(
       (cantidadActual) =>
         Math.min(
           Math.max(cantidadActual, 1),
@@ -462,6 +515,7 @@ function VentasSemanalesPage() {
       fechaInicial: '',
       fechaFinal: '',
       cliente: '',
+      area: '',
       referencia: '',
       talla: '',
       tipo: '',
@@ -469,6 +523,7 @@ function VentasSemanalesPage() {
 
     setFiltros(filtrosLimpios)
     setFiltrosAplicados(filtrosLimpios)
+    setAgruparPor('referencia')
   }
 
 
@@ -486,23 +541,66 @@ function VentasSemanalesPage() {
         TODAS_LAS_REFERENCIAS,
     )
 
-  const maximoReferencias = Math.max(
-    resultado?.total_referencias ?? 1,
+  const categoriaSeleccionadaEspecifica =
+    agruparPor === 'cliente'
+      ? Boolean(filtros.cliente)
+      : agruparPor === 'area'
+        ? Boolean(filtros.area)
+        : referenciaSeleccionadaEspecifica
+
+  const categoriaAplicadaEspecifica =
+    agruparPor === 'cliente'
+      ? Boolean(filtrosAplicados.cliente)
+      : agruparPor === 'area'
+        ? Boolean(filtrosAplicados.area)
+        : referenciaAplicadaEspecifica
+
+  const categoriaPlural =
+    agruparPor === 'cliente'
+      ? 'clientes'
+      : agruparPor === 'area'
+        ? 'áreas'
+        : 'referencias'
+
+  const articuloCategorias =
+    agruparPor === 'cliente'
+      ? 'los'
+      : 'las'
+
+  const categoriaSingular =
+    agruparPor === 'cliente'
+      ? 'Cliente'
+      : agruparPor === 'area'
+        ? 'Área'
+        : 'Referencia'
+
+  const categoriaSingularMinuscula =
+    categoriaSingular.toLocaleLowerCase(
+      'es-CO',
+    )
+
+  const categoriaOtras =
+    agruparPor === 'cliente'
+      ? 'OTROS'
+      : 'OTRAS'
+
+  const maximoCategorias = Math.max(
+    resultado?.total_categorias ?? 1,
     1,
   )
 
-  const cantidadReferenciasAplicada =
-    referenciaAplicadaEspecifica
+  const cantidadCategoriasAplicada =
+    categoriaAplicadaEspecifica
       ? 1
       : Math.min(
-          cantidadReferencias,
-          maximoReferencias,
+          cantidadCategorias,
+          maximoCategorias,
         )
 
   const semanasDisponibles =
     resultado?.semanas ?? []
 
-  const referenciasOrdenadasTorta =
+  const categoriasOrdenadasTorta =
     resultado?.datos
       .filter(
         (dato) =>
@@ -514,24 +612,24 @@ function VentasSemanalesPage() {
           primero.unidades,
       ) ?? []
 
-  const referenciasGrafica =
+  const categoriasGrafica =
     tipoGrafica === 'torta'
-      ? referenciasOrdenadasTorta
+      ? categoriasOrdenadasTorta
           .slice(
             0,
-            cantidadReferenciasAplicada,
+            cantidadCategoriasAplicada,
           )
           .map(
-            (item) => item.referencia,
+            (item) => item.categoria,
           )
       : (
-          resultado?.referencias
+          resultado?.categorias
             .slice(
               0,
-              cantidadReferenciasAplicada,
+              cantidadCategoriasAplicada,
             )
             .map(
-              (item) => item.referencia,
+              (item) => item.categoria,
             ) ?? []
         )
 
@@ -566,21 +664,21 @@ function VentasSemanalesPage() {
         semana: dato.semana,
       }
 
-    const referenciaGrafica =
-      referenciasGrafica.includes(
-        dato.referencia,
+    const categoriaGrafica =
+      categoriasGrafica.includes(
+        dato.categoria,
       )
-        ? dato.referencia
-        : 'OTRAS'
+        ? dato.categoria
+        : categoriaOtras
 
-    if (referenciaGrafica === 'OTRAS') {
+    if (categoriaGrafica === categoriaOtras) {
       existenOtras = true
     }
 
-    puntoExistente[referenciaGrafica] =
+    puntoExistente[categoriaGrafica] =
       Number(
         puntoExistente[
-          referenciaGrafica
+          categoriaGrafica
         ] ?? 0,
       ) + dato.unidades
 
@@ -591,8 +689,8 @@ function VentasSemanalesPage() {
   })
 
   const seriesGrafica = existenOtras
-    ? [...referenciasGrafica, 'OTRAS']
-    : referenciasGrafica
+    ? [...categoriasGrafica, categoriaOtras]
+    : categoriasGrafica
 
   const datosGrafica = Array.from(
     datosPorSemana.values(),
@@ -603,8 +701,8 @@ function VentasSemanalesPage() {
       }
 
       seriesGrafica.forEach(
-        (referencia) => {
-          puntoCompleto[referencia] ??= 0
+        (categoria) => {
+          puntoCompleto[categoria] ??= 0
         },
       )
 
@@ -618,17 +716,24 @@ function VentasSemanalesPage() {
 
   const datosTorta: PuntoTorta[] =
     seriesGrafica
-      .map((referencia) => ({
-        referencia,
+      .map((categoria) => ({
+        categoria,
         unidades: Number(
           datosGrafica[0]?.[
-            referencia
+            categoria
           ] ?? 0,
         ),
       }))
       .filter(
         (dato) => dato.unidades > 0,
       )
+
+  const totalUnidadesTorta =
+    datosTorta.reduce(
+      (total, dato) =>
+        total + dato.unidades,
+      0,
+    )
 
   const totalPaginasDetalle =
     Math.max(
@@ -647,22 +752,22 @@ function VentasSemanalesPage() {
         FILAS_POR_PAGINA,
     ) ?? []
 
-  const totalPaginasReferencias =
+  const totalPaginasCategorias =
     Math.max(
       Math.ceil(
         (
-          resultado?.referencias.length ??
+          resultado?.categorias.length ??
           0
         ) / FILAS_POR_PAGINA,
       ),
       1,
     )
 
-  const referenciasPagina =
-    resultado?.referencias.slice(
-      (paginaReferencias - 1) *
+  const categoriasPagina =
+    resultado?.categorias.slice(
+      (paginaCategorias - 1) *
         FILAS_POR_PAGINA,
-      paginaReferencias *
+      paginaCategorias *
         FILAS_POR_PAGINA,
     ) ?? []
 
@@ -774,6 +879,42 @@ function VentasSemanalesPage() {
                           value={cliente}
                         >
                           {cliente}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+
+                <div className="campo-filtro">
+                  <label htmlFor="ventaArea">
+                    Área
+                  </label>
+
+                  <select
+                    id="ventaArea"
+                    value={filtros.area}
+                    onChange={(evento) =>
+                      setFiltros(
+                        (actuales) => ({
+                          ...actuales,
+                          area:
+                            evento.target
+                              .value,
+                        }),
+                      )
+                    }
+                  >
+                    <option value="">
+                      Todas
+                    </option>
+
+                    {opciones.areas.map(
+                      (area) => (
+                        <option
+                          key={area}
+                          value={area}
+                        >
+                          {area}
                         </option>
                       ),
                     )}
@@ -919,6 +1060,35 @@ function VentasSemanalesPage() {
                 }
               >
                 <div className="campo-filtro">
+                  <label htmlFor="agruparPor">
+                    Agrupar gráfica por
+                  </label>
+
+                  <select
+                    id="agruparPor"
+                    value={agruparPor}
+                    onChange={(evento) =>
+                      setAgruparPor(
+                        evento.target
+                          .value as Agrupacion,
+                      )
+                    }
+                  >
+                    <option value="referencia">
+                      Referencia
+                    </option>
+
+                    <option value="cliente">
+                      Cliente
+                    </option>
+
+                    <option value="area">
+                      Área
+                    </option>
+                  </select>
+                </div>
+
+                <div className="campo-filtro">
                   <label htmlFor="tipoGrafica">
                     Tipo de gráfica
                   </label>
@@ -952,35 +1122,35 @@ function VentasSemanalesPage() {
                 </div>
 
                 <div className="campo-filtro">
-                  <label htmlFor="cantidadReferencias">
-                    Referencias en gráfica
+                  <label htmlFor="cantidadCategorias">
+                    {categoriaSingular}s en gráfica
                   </label>
 
                   <input
-                    id="cantidadReferencias"
+                    id="cantidadCategorias"
                     type="number"
                     min={1}
-                    max={maximoReferencias}
+                    max={maximoCategorias}
                     value={
-                      referenciaSeleccionadaEspecifica
+                      categoriaSeleccionadaEspecifica
                         ? 1
-                        : cantidadReferencias
+                        : cantidadCategorias
                     }
                     disabled={
-                      referenciaSeleccionadaEspecifica
+                      categoriaSeleccionadaEspecifica
                     }
                     onChange={(evento) => {
                       const cantidad = Number(
                         evento.target.value,
                       )
 
-                      setCantidadReferencias(
+                      setCantidadCategorias(
                         Math.min(
                           Math.max(
                             cantidad || 1,
                             1,
                           ),
-                          maximoReferencias,
+                          maximoCategorias,
                         ),
                       )
                     }}
@@ -988,7 +1158,7 @@ function VentasSemanalesPage() {
 
                   <small>
                     Máximo disponible:{' '}
-                    {maximoReferencias}
+                    {maximoCategorias}
                   </small>
                 </div>
 
@@ -1089,12 +1259,14 @@ function VentasSemanalesPage() {
                   </div>
 
                   <div className="tarjeta-indicador">
-                    <span>Referencias</span>
+                    <span>
+                      {categoriaSingular}s
+                    </span>
 
                     <strong>
                       {
                         resultado
-                          .total_referencias
+                          .total_categorias
                       }
                     </strong>
                   </div>
@@ -1109,7 +1281,8 @@ function VentasSemanalesPage() {
                         'torta'
                           ? (
                               'Distribución de ' +
-                              'unidades — ' +
+                              'unidades por ' +
+                              `${categoriaSingularMinuscula} — ` +
                               (
                                 semanaTorta
                                   ? formatearSemana(
@@ -1118,21 +1291,24 @@ function VentasSemanalesPage() {
                                   : 'sin semana'
                               )
                             )
-                          : 'Unidades por semana'}
+                          : (
+                              'Unidades por semana y ' +
+                              categoriaSingularMinuscula
+                            )}
                       </h3>
 
                       <p>
-                        Se muestran las{' '}
+                        Se muestran {articuloCategorias}{' '}
                         {Math.min(
-                          cantidadReferenciasAplicada,
-                          referenciasGrafica.length,
+                          cantidadCategoriasAplicada,
+                          categoriasGrafica.length,
                         )}{' '}
-                        referencias con más
+                        {categoriaPlural} con más
                         unidades
                         {existenOtras
                           ? (
                               ' y las restantes ' +
-                              'se agrupan como OTRAS.'
+                              `se agrupan como ${categoriaOtras}.`
                             )
                           : '.'}
                       </p>
@@ -1152,23 +1328,11 @@ function VentasSemanalesPage() {
                             <Pie
                               data={datosTorta}
                               dataKey="unidades"
-                              nameKey="referencia"
-                              cx="50%"
+                              nameKey="categoria"
+                              cx="38%"
                               cy="50%"
-                              outerRadius={140}
-                              label={({
-                                name,
-                                percent,
-                              }) =>
-                                `${name}: ${(
-                                  Number(
-                                    percent ??
-                                      0,
-                                  ) * 100
-                                ).toFixed(
-                                  1,
-                                )}%`
-                              }
+                              outerRadius={215}
+                              paddingAngle={1}
                             >
                               {datosTorta.map(
                                 (
@@ -1177,13 +1341,14 @@ function VentasSemanalesPage() {
                                 ) => (
                                   <Cell
                                     key={
-                                      dato.referencia
+                                      dato.categoria
                                     }
                                     fill={
-                                      COLORES_GRAFICA[
-                                        indice %
-                                          COLORES_GRAFICA.length
-                                      ]
+                                      colorDeCategoria(
+                                        dato.categoria,
+                                        indice,
+                                        categoriaOtras,
+                                      )
                                     }
                                   />
                                 ),
@@ -1203,7 +1368,47 @@ function VentasSemanalesPage() {
                               }
                             />
 
-                            <Legend />
+                            <Legend
+                              layout="vertical"
+                              align="right"
+                              verticalAlign="middle"
+                              iconType="square"
+                              wrapperStyle={{
+                                width: '38%',
+                                paddingLeft: 24,
+                                lineHeight: '2.2',
+                                fontSize: '0.88rem',
+                              }}
+                              formatter={(valor) => {
+                                const dato =
+                                  datosTorta.find(
+                                    (item) =>
+                                      item.categoria ===
+                                      String(valor),
+                                  )
+
+                                if (!dato) {
+                                  return String(valor)
+                                }
+
+                                const porcentaje =
+                                  totalUnidadesTorta > 0
+                                    ? (
+                                        dato.unidades /
+                                        totalUnidadesTorta
+                                      ) * 100
+                                    : 0
+
+                                return (
+                                  `${dato.categoria}: ` +
+                                  `${porcentaje.toFixed(1)}% · ` +
+                                  dato.unidades.toLocaleString(
+                                    'es-CO',
+                                  ) +
+                                  ' unidades'
+                                )
+                              }}
+                            />
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
@@ -1226,7 +1431,7 @@ function VentasSemanalesPage() {
                             top: 20,
                             right: 20,
                             left: 20,
-                            bottom: 20,
+                            bottom: 44,
                           }}
                         >
                           <CartesianGrid
@@ -1240,6 +1445,7 @@ function VentasSemanalesPage() {
                               formatearSemana
                             }
                             minTickGap={28}
+                            tickMargin={18}
                           />
 
                           <YAxis
@@ -1280,22 +1486,29 @@ function VentasSemanalesPage() {
 
                           {seriesGrafica.map(
                             (
-                              referencia,
+                              categoria,
                               indice,
                             ) => (
                               <Line
                                 key={
-                                  referencia
+                                  categoria
                                 }
                                 type="linear"
                                 dataKey={
-                                  referencia
+                                  categoria
                                 }
                                 stroke={
-                                  COLORES_GRAFICA[
-                                    indice %
-                                      COLORES_GRAFICA.length
-                                  ]
+                                  colorDeCategoria(
+                                    categoria,
+                                    indice,
+                                    categoriaOtras,
+                                  )
+                                }
+                                strokeDasharray={
+                                  categoria ===
+                                  categoriaOtras
+                                    ? '7 5'
+                                    : undefined
                                 }
                                 strokeWidth={2}
                                 dot={
@@ -1377,15 +1590,15 @@ function VentasSemanalesPage() {
 
                           {seriesGrafica.map(
                             (
-                              referencia,
+                              categoria,
                               indice,
                             ) => (
                               <Bar
                                 key={
-                                  referencia
+                                  categoria
                                 }
                                 dataKey={
-                                  referencia
+                                  categoria
                                 }
                                 stackId={
                                   tipoGrafica ===
@@ -1394,10 +1607,11 @@ function VentasSemanalesPage() {
                                     : undefined
                                 }
                                 fill={
-                                  COLORES_GRAFICA[
-                                    indice %
-                                      COLORES_GRAFICA.length
-                                  ]
+                                  colorDeCategoria(
+                                    categoria,
+                                    indice,
+                                    categoriaOtras,
+                                  )
                                 }
                               />
                             ),
@@ -1437,7 +1651,9 @@ function VentasSemanalesPage() {
                       <thead>
                         <tr>
                           <th>Semana</th>
-                          <th>Referencia</th>
+                          <th>
+                            {categoriaSingular}
+                          </th>
                           <th>Unidades</th>
                         </tr>
                       </thead>
@@ -1448,7 +1664,7 @@ function VentasSemanalesPage() {
                             <tr
                               key={
                                 `${dato.semana}-` +
-                                dato.referencia
+                                dato.categoria
                               }
                             >
                               <td>
@@ -1458,7 +1674,7 @@ function VentasSemanalesPage() {
                               </td>
 
                               <td>
-                                {dato.referencia}
+                                {dato.categoria}
                               </td>
 
                               <td>
@@ -1526,14 +1742,17 @@ function VentasSemanalesPage() {
                   }
                 >
                   <h3>
-                    Total por referencia
+                    Total por{' '}
+                    {categoriaSingularMinuscula}
                   </h3>
 
                   <div className="contenedor-tabla">
                     <table className="tabla-radicados">
                       <thead>
                         <tr>
-                          <th>Referencia</th>
+                          <th>
+                            {categoriaSingular}
+                          </th>
                           <th>
                             Total de unidades
                           </th>
@@ -1541,16 +1760,16 @@ function VentasSemanalesPage() {
                       </thead>
 
                       <tbody>
-                        {referenciasPagina.map(
+                        {categoriasPagina.map(
                           (item) => (
                             <tr
                               key={
-                                item.referencia
+                                item.categoria
                               }
                             >
                               <td>
                                 {
-                                  item.referencia
+                                  item.categoria
                                 }
                               </td>
 
@@ -1567,17 +1786,17 @@ function VentasSemanalesPage() {
                     </table>
                   </div>
 
-                  {totalPaginasReferencias >
+                  {totalPaginasCategorias >
                     1 && (
                     <div className="paginacion-tabla">
                       <button
                         type="button"
                         disabled={
-                          paginaReferencias ===
+                          paginaCategorias ===
                           1
                         }
                         onClick={() =>
-                          setPaginaReferencias(
+                          setPaginaCategorias(
                             (actual) =>
                               actual - 1,
                           )
@@ -1587,20 +1806,20 @@ function VentasSemanalesPage() {
                       </button>
 
                       <span>
-                        {paginaReferencias} de{' '}
+                        {paginaCategorias} de{' '}
                         {
-                          totalPaginasReferencias
+                          totalPaginasCategorias
                         }
                       </span>
 
                       <button
                         type="button"
                         disabled={
-                          paginaReferencias >=
-                          totalPaginasReferencias
+                          paginaCategorias >=
+                          totalPaginasCategorias
                         }
                         onClick={() =>
-                          setPaginaReferencias(
+                          setPaginaCategorias(
                             (actual) =>
                               actual + 1,
                           )

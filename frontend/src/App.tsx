@@ -101,7 +101,7 @@ function App() {
         <div className="controles-encabezado">
           <nav className="navegacion">
             <NavLink to="/importaciones">
-              Importar Excel
+              Importar y exportar Excel
             </NavLink>
 
             <NavLink to="/radicados">

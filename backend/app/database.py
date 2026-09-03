@@ -25,3 +25,27 @@ client = MongoClient(
 database = client[MONGODB_DATABASE]
 radicados_collection = database[MONGODB_COLLECTION]
 configuracion_collection = database["configuracion"]
+
+
+def asegurar_indices_radicados() -> None:
+    radicados_collection.create_index(
+        [("Area", 1)],
+        name="idx_area",
+    )
+
+    radicados_collection.create_index(
+        [("_metadatos.hoja_origen", 1)],
+        name="idx_hoja_origen",
+    )
+
+    radicados_collection.create_index(
+        [
+            ("_metadatos.hoja_origen", 1),
+            ("_clave_registro", 1),
+        ],
+        name="uq_hoja_clave_registro",
+        unique=True,
+        partialFilterExpression={
+            "_clave_registro": {"$type": "string"},
+        },
+    )

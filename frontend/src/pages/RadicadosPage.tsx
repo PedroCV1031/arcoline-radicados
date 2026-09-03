@@ -22,6 +22,7 @@ interface Radicado {
   'Fecha entrega final': string | null
   Cliente: string | null
   'Orden de compra': string | number | null
+  Area: string | null
   Referencia: string | null
   Talla: string | number | null
   Tipo: string | null
@@ -43,6 +44,7 @@ interface RespuestaRadicados {
 
 interface OpcionesFiltros {
   clientes: string[]
+  areas: string[]
   referencias: string[]
   hojas: string[]
   tallas: string[]
@@ -57,12 +59,12 @@ interface Filtros {
   fechaInicial: string
   fechaFinal: string
   cliente: string
+  area: string
   referencia: string
   ordenCompra: string
   hojaOrigen: string
   talla: string
   tipo: string
-  estado: string
   ordenarPor: string
   direccion: string
   limite: number
@@ -72,12 +74,12 @@ const filtrosIniciales: Filtros = {
   fechaInicial: '',
   fechaFinal: '',
   cliente: '',
+  area: '',
   referencia: '',
   ordenCompra: '',
   hojaOrigen: '',
   talla: '',
   tipo: '',
-  estado: '',
   ordenarPor: 'fecha_ingreso',
   direccion: 'desc',
   limite: 20,
@@ -100,10 +102,10 @@ function claseEstado(estado: string) {
     'En proceso': 'estado-en-proceso',
     'Entrega próxima': 'estado-entrega-proxima',
     'Entregado': 'estado-entregado',
-    'Entregado a tiempo': 'estado-entregado-a-tiempo',
+    'Entregado a tiempo': 'estado-entregado-tiempo',
     'Entregado tarde': 'estado-entregado-tarde',
     'Entregado sin fecha': 'estado-entregado-sin-fecha',
-    'Vencido sin entregar': 'estado-vencido-sin-entregar',
+    'Vencido sin entregar': 'estado-vencido',
   }
 
   return clases[estado] ?? 'estado-desconocido'
@@ -124,14 +126,14 @@ function RadicadosPage() {
   const [filtrosAplicados, setFiltrosAplicados] =
     useState<Filtros>(filtrosIniciales)
 
-  const [opciones, setOpciones] =
-    useState<OpcionesFiltros>({
-      clientes: [],
-      referencias: [],
-      hojas: [],
-      tallas: [],
-      tipos: [],
-    })
+  const [opciones, setOpciones] = useState<OpcionesFiltros>({
+    clientes: [],
+    areas: [],
+    referencias: [],
+    hojas: [],
+    tallas: [],
+    tipos: [],
+  })
 
   const [diasEntregaProxima, setDiasEntregaProxima] =
     useState(3)
@@ -161,17 +163,15 @@ function RadicadosPage() {
   useEffect(() => {
     async function cargarInformacionInicial() {
       try {
-        const [
-          respuestaOpciones,
-          respuestaConfiguracion,
-        ] = await Promise.all([
-          api.get<OpcionesFiltros>(
-            '/api/radicados/opciones-filtros',
-          ),
-          api.get<ConfiguracionEntregas>(
-            '/api/configuracion/entregas',
-          ),
-        ])
+        const [respuestaOpciones, respuestaConfiguracion] =
+          await Promise.all([
+            api.get<OpcionesFiltros>(
+              '/api/radicados/opciones-filtros',
+            ),
+            api.get<ConfiguracionEntregas>(
+              '/api/configuracion/entregas',
+            ),
+          ])
 
         setOpciones({
           ...respuestaOpciones.data,
@@ -198,7 +198,6 @@ function RadicadosPage() {
   useEffect(() => {
     const referenciaSeleccionada = filtros.referencia
     const tallaSeleccionada = filtros.talla
-
     let consultaCancelada = false
 
     if (!referenciaSeleccionada) {
@@ -305,14 +304,14 @@ function RadicadosPage() {
                 filtrosAplicados.fechaFinal || undefined,
               cliente:
                 filtrosAplicados.cliente || undefined,
+              area:
+                filtrosAplicados.area || undefined,
               referencia:
                 filtrosAplicados.referencia || undefined,
               talla:
                 filtrosAplicados.talla || undefined,
               tipo:
                 filtrosAplicados.tipo || undefined,
-              estado:
-                filtrosAplicados.estado || undefined,
               orden_compra:
                 filtrosAplicados.ordenCompra || undefined,
               hoja_origen:
@@ -369,7 +368,7 @@ function RadicadosPage() {
       diasEntregaProxima > 365
     ) {
       setMensajeConfiguracion(
-        'El número debe estar entre 0 y 365 días.',
+        'El número de días debe estar entre 0 y 365.',
       )
       return
     }
@@ -405,9 +404,9 @@ function RadicadosPage() {
   }
 
 
-  const referenciaEspecifica = Boolean(
+  const referenciaEspecifica = (
     filtros.referencia &&
-    filtros.referencia !== TODAS_LAS_REFERENCIAS,
+    filtros.referencia !== TODAS_LAS_REFERENCIAS
   )
 
   const tipoHabilitado = Boolean(
@@ -420,7 +419,6 @@ function RadicadosPage() {
       <div className="titulo-pagina">
         <div>
           <h2>Radicados</h2>
-
           <p>
             Información almacenada actualmente en la base
             de datos
@@ -428,55 +426,47 @@ function RadicadosPage() {
         </div>
 
         <div className="cabecera-radicados">
+          <div className="configuracion-entregas">
+            <label htmlFor="diasEntregaProxima">
+              Entregas proximas
+            </label>
+
+            <input
+              id="diasEntregaProxima"
+              type="number"
+              min={0}
+              max={365}
+              value={diasEntregaProxima}
+              onChange={(evento) =>
+                setDiasEntregaProxima(
+                  Number(evento.target.value),
+                )
+              }
+            />
+
+            <span>días</span>
+
+            <button
+              type="button"
+              className="boton-secundario"
+              disabled={guardandoConfiguracion}
+              onClick={guardarConfiguracion}
+            >
+              {guardandoConfiguracion
+                ? 'Guardando...'
+                : 'Guardar'}
+            </button>
+          </div>
+
+          {mensajeConfiguracion && (
+            <small className="mensaje-configuracion">
+              {mensajeConfiguracion}
+            </small>
+          )}
+
           <div className="contador-registros">
             {totalRegistros.toLocaleString('es-CO')}{' '}
             registros
-          </div>
-
-          <div className="configuracion-entregas">
-            <div className="texto-configuracion-entregas">
-              <strong>Entrega próxima</strong>
-
-              <small>
-                Anticipación para marcar un pedido próximo
-                a vencer
-              </small>
-            </div>
-
-            <div className="controles-configuracion-entregas">
-              <input
-                id="diasEntregaProxima"
-                type="number"
-                min={0}
-                max={365}
-                aria-label="Días de anticipación"
-                value={diasEntregaProxima}
-                onChange={(evento) =>
-                  setDiasEntregaProxima(
-                    Number(evento.target.value),
-                  )
-                }
-              />
-
-              <span>días</span>
-
-              <button
-                type="button"
-                className="boton-secundario"
-                disabled={guardandoConfiguracion}
-                onClick={guardarConfiguracion}
-              >
-                {guardandoConfiguracion
-                  ? 'Guardando...'
-                  : 'Guardar'}
-              </button>
-            </div>
-
-            {mensajeConfiguracion && (
-              <small className="mensaje-configuracion">
-                {mensajeConfiguracion}
-              </small>
-            )}
           </div>
         </div>
       </div>
@@ -527,6 +517,29 @@ function RadicadosPage() {
                   )
                 }
               />
+            </div>
+
+            <div className="campo-filtro">
+              <label htmlFor="area">Área</label>
+
+              <select
+                id="area"
+                value={filtros.area}
+                onChange={(evento) =>
+                  actualizarFiltro(
+                    'area',
+                    evento.target.value,
+                  )
+                }
+              >
+                <option value="">Todas</option>
+
+                {opciones.areas.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="campo-filtro">
@@ -686,44 +699,6 @@ function RadicadosPage() {
             </div>
 
             <div className="campo-filtro">
-              <label htmlFor="estado">Estado</label>
-
-              <select
-                id="estado"
-                value={filtros.estado}
-                onChange={(evento) =>
-                  actualizarFiltro(
-                    'estado',
-                    evento.target.value,
-                  )
-                }
-              >
-                <option value="">Todos</option>
-                <option value="en_proceso">
-                  En proceso
-                </option>
-                <option value="entrega_proxima">
-                  Entrega próxima
-                </option>
-                <option value="entregado">
-                  Entregado
-                </option>
-                <option value="entregado_a_tiempo">
-                  Entregado a tiempo
-                </option>
-                <option value="entregado_tarde">
-                  Entregado tarde
-                </option>
-                <option value="entregado_sin_fecha">
-                  Entregado sin fecha
-                </option>
-                <option value="vencido_sin_entregar">
-                  Vencido sin entregar
-                </option>
-              </select>
-            </div>
-
-            <div className="campo-filtro">
               <label htmlFor="ordenarPor">
                 Ordenar por
               </label>
@@ -741,13 +716,17 @@ function RadicadosPage() {
                 <option value="fecha_ingreso">
                   Fecha de ingreso
                 </option>
+
                 <option value="fecha_limite">
                   Fecha límite
                 </option>
+
                 <option value="fecha_entrega">
                   Fecha de entrega
                 </option>
+
                 <option value="cliente">Cliente</option>
+                <option value="area">Área</option>
                 <option value="referencia">
                   Referencia
                 </option>
@@ -804,24 +783,24 @@ function RadicadosPage() {
                 <option value={100}>100</option>
               </select>
             </div>
+
+            <div className="acciones-filtros">
+              <button
+                type="submit"
+                className="boton-principal"
+              >
+                Aplicar filtros
+              </button>
+
+              <button
+                type="button"
+                className="boton-secundario"
+                onClick={limpiarFiltros}
+              >
+                Limpiar
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="acciones-filtros">
-          <button
-            type="submit"
-            className="boton-principal"
-          >
-            Aplicar filtros
-          </button>
-
-          <button
-            type="button"
-            className="boton-secundario"
-            onClick={limpiarFiltros}
-          >
-            Limpiar
-          </button>
         </div>
       </form>
 
@@ -848,6 +827,7 @@ function RadicadosPage() {
                   <th>Fecha de entrega</th>
                   <th>Cliente</th>
                   <th>Orden de compra</th>
+                  <th>Área</th>
                   <th>Referencia</th>
                   <th>Talla</th>
                   <th>Tipo</th>
@@ -876,17 +856,26 @@ function RadicadosPage() {
 
                     <td>
                       {formatearFecha(
-                        registro['Fecha entrega final'],
+                        registro[
+                          'Fecha entrega final'
+                        ],
                       )}
                     </td>
 
                     <td>{registro.Cliente ?? '—'}</td>
 
                     <td>
-                      {registro['Orden de compra'] ?? '—'}
+                      {registro[
+                        'Orden de compra'
+                      ] ?? '—'}
                     </td>
 
-                    <td>{registro.Referencia ?? '—'}</td>
+                    <td>{registro.Area ?? 'SIN ÁREA'}</td>
+
+                    <td>
+                      {registro.Referencia ?? '—'}
+                    </td>
+
                     <td>{registro.Talla ?? '—'}</td>
                     <td>{registro.Tipo ?? '—'}</td>
 
@@ -929,11 +918,11 @@ function RadicadosPage() {
                 {registros.length === 0 && (
                   <tr>
                     <td
-                      colSpan={13}
+                      colSpan={14}
                       className="sin-resultados"
                     >
-                      No se encontraron registros con los
-                      filtros seleccionados.
+                      No se encontraron registros con
+                      los filtros seleccionados.
                     </td>
                   </tr>
                 )}
