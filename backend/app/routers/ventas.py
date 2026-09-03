@@ -1,6 +1,6 @@
-import re
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
@@ -39,6 +39,26 @@ def expresion_igualdad(campo: str, valor: str) -> dict:
             expresion_texto_normalizado(campo),
             valor.strip().upper(),
         ]
+    }
+
+
+def expresion_categoria_normalizada(
+    campo: str,
+    valor_vacio: str,
+) -> dict:
+    return {
+        "$let": {
+            "vars": {
+                "valor": expresion_texto_normalizado(campo),
+            },
+            "in": {
+                "$cond": [
+                    {"$eq": ["$$valor", ""]},
+                    valor_vacio,
+                    "$$valor",
+                ]
+            },
+        }
     }
 
 
@@ -95,9 +115,15 @@ def consultar_ventas_semanales(
     fecha_inicial: date | None = None,
     fecha_final: date | None = None,
     cliente: str | None = None,
+    area: str | None = None,
     referencia: str | None = None,
     talla: str | None = None,
     tipo: str | None = None,
+    agrupar_por: Literal[
+        "referencia",
+        "cliente",
+        "area",
+    ] = "referencia",
 ):
     if (
         fecha_inicial
@@ -160,10 +186,15 @@ def consultar_ventas_semanales(
     expresiones: list[dict] = []
 
     if cliente:
-        filtros["Cliente"] = {
-            "$regex": re.escape(cliente.strip()),
-            "$options": "i",
-        }
+        expresiones.append(
+            expresion_igualdad(
+                "Cliente",
+                cliente,
+            )
+        )
+
+    if area:
+        filtros["Area"] = area.strip().upper()
 
     if referencia and not referencia_es_todas:
         expresiones.append(
@@ -196,24 +227,50 @@ def consultar_ventas_semanales(
             else {"$and": expresiones}
         )
 
+    campos_agrupacion = {
+        "referencia": "Referencia",
+        "cliente": "Cliente",
+        "area": "Area",
+    }
+
+    etiquetas_sin_valor = {
+        "referencia": "SIN REFERENCIA",
+        "cliente": "SIN CLIENTE",
+        "area": "SIN ÁREA",
+    }
+
+    campo_agrupacion = campos_agrupacion[
+        agrupar_por
+    ]
+
+    etiqueta_sin_valor = etiquetas_sin_valor[
+        agrupar_por
+    ]
+
     pipeline = [
         {
             "$match": filtros,
         },
         {
             "$set": {
-                "referencia_normalizada": (
-                    expresion_texto_normalizado(
-                        "Referencia"
+                "categoria_normalizada": (
+                    expresion_categoria_normalizada(
+                        campo_agrupacion,
+                        etiqueta_sin_valor,
                     )
                 ),
                 "cantidad_numerica": {
-                    "$convert": {
-                        "input": "$Cantidad",
-                        "to": "double",
-                        "onError": 0,
-                        "onNull": 0,
-                    }
+                    "$round": [
+                        {
+                            "$convert": {
+                                "input": "$Cantidad",
+                                "to": "double",
+                                "onError": 0,
+                                "onNull": 0,
+                            }
+                        },
+                        0,
+                    ]
                 },
             }
         },
@@ -233,8 +290,8 @@ def consultar_ventas_semanales(
             "$group": {
                 "_id": {
                     "semana": "$inicio_semana",
-                    "referencia": (
-                        "$referencia_normalizada"
+                    "categoria": (
+                        "$categoria_normalizada"
                     ),
                 },
                 "unidades": {
@@ -245,7 +302,7 @@ def consultar_ventas_semanales(
         {
             "$sort": {
                 "_id.semana": 1,
-                "_id.referencia": 1,
+                "_id.categoria": 1,
             }
         },
     ]
@@ -255,14 +312,14 @@ def consultar_ventas_semanales(
     )
 
     datos = []
-    totales_referencia = defaultdict(float)
+    totales_categoria = defaultdict(float)
     semanas_con_datos: set[str] = set()
     total_unidades = 0.0
 
     for registro in resultado:
         semana = registro["_id"]["semana"]
-        referencia_actual = (
-            registro["_id"]["referencia"]
+        categoria_actual = (
+            registro["_id"]["categoria"]
         )
 
         unidades = normalizar_numero(
@@ -273,14 +330,15 @@ def consultar_ventas_semanales(
 
         datos.append({
             "semana": semana_texto,
-            "referencia": referencia_actual,
+            "categoria": categoria_actual,
+            "referencia": categoria_actual,
             "unidades": unidades,
         })
 
         semanas_con_datos.add(semana_texto)
 
-        totales_referencia[
-            referencia_actual
+        totales_categoria[
+            categoria_actual
         ] += unidades
 
         total_unidades += unidades
@@ -291,13 +349,13 @@ def consultar_ventas_semanales(
         semanas_con_datos=semanas_con_datos,
     )
 
-    resumen_referencias = [
+    resumen_categorias = [
         {
-            "referencia": referencia_actual,
+            "categoria": categoria_actual,
             "unidades": normalizar_numero(unidades),
         }
-        for referencia_actual, unidades in sorted(
-            totales_referencia.items(),
+        for categoria_actual, unidades in sorted(
+            totales_categoria.items(),
             key=lambda elemento: elemento[1],
             reverse=True,
         )
@@ -308,18 +366,30 @@ def consultar_ventas_semanales(
             "fecha_inicial": fecha_inicial,
             "fecha_final": fecha_final,
             "cliente": cliente,
+            "area": area,
             "referencia": referencia,
             "talla": talla,
             "tipo": tipo,
+            "agrupar_por": agrupar_por,
         },
         "total_unidades": normalizar_numero(
             total_unidades
         ),
         "total_semanas": len(semanas),
+        "total_categorias": len(
+            totales_categoria
+        ),
         "total_referencias": len(
-            totales_referencia
+            totales_categoria
         ),
         "semanas": semanas,
-        "referencias": resumen_referencias,
+        "categorias": resumen_categorias,
+        "referencias": [
+            {
+                "referencia": item["categoria"],
+                "unidades": item["unidades"],
+            }
+            for item in resumen_categorias
+        ],
         "datos": datos,
     }
