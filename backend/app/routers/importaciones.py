@@ -243,7 +243,7 @@ def agregar_registro_exportacion(
         if columna in COLUMNAS_FECHA:
             celda.number_format = "dd/mm/yyyy"
         elif columna in COLUMNAS_NUMERO:
-            celda.number_format = "#,##0.##"
+            celda.number_format = "#,##0##"
         elif celda.value is not None:
             celda.data_type = "s"
             celda.number_format = "@"
